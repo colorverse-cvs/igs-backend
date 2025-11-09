@@ -12,12 +12,22 @@ export class ProductsService {
     @InjectModel(Category.name) private categoryModel: Model<CategoryDocument>,
   ) {}
 
-  async createProduct(createProductDto: CreateProductDto): Promise<Product> {
+  async createProduct(createProductDto: CreateProductDto, files?: Express.Multer.File[]): Promise<Product> {
     const { categoryId, ...rest } = createProductDto;
     const category = await this.categoryModel.findById(categoryId);
     if (!category) throw new NotFoundException('Category not found');
 
-    const product = new this.productModel({ ...rest, category: category.id });
+    const images = files?.map((file, index) => ({
+      url: `/uploads/products/${file.filename}`,
+      isPrimary: index === 0,
+      position: index,
+      meta: {
+        originalName: file.originalname,
+        mimeType: file.mimetype,
+      },
+    }));
+
+    const product = new this.productModel({ ...rest, category: category.id, images, });
     const savedProduct = await product.save();
 
     // optionally link product to category
@@ -37,10 +47,23 @@ export class ProductsService {
     return product;
   }
 
-  async updateProduct(id: string, updateProductDto: UpdateProductDto): Promise<Product> {
+  async updateProduct(id: string, updateProductDto: UpdateProductDto, files?: Express.Multer.File[]): Promise<Product> {
     const { categoryId, ...rest } = updateProductDto;
     const product = await this.findProductById(id);
+    let images: { url: string; isPrimary: boolean; position: number; meta: { originalName: string; mimeType: string; }; }[] | undefined;
+    if (files?.length) {
+      images = files.map((file, index) => ({
+        url: `/uploads/products/${file.filename}`,
+        isPrimary: index === 0,
+        position: index,
+        meta: {
+          originalName: file.originalname,
+          mimeType: file.mimetype,
+        },
+      }));
 
+      updateProductDto['images'] = images;
+    }
     if (categoryId) {
       const category = await this.categoryModel.findById(categoryId);
       if (!category) throw new NotFoundException('Category not found');

@@ -1,55 +1,85 @@
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsNumber, IsOptional, IsString, IsArray, IsBoolean, IsISO8601, ValidateNested, IsObject, } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import { ImageDto, DimensionsDto } from './create-product.dto';
 
 export class UpdateProductDto {
-    @ApiPropertyOptional({
-        example: 'Smartphone Pro',
-        description: 'Updated product name (optional)',
-    })
+    @ApiPropertyOptional({ example: 'Smartphone Pro' })
     @IsOptional()
     @IsString()
     name?: string;
 
-    @ApiPropertyOptional({
-        example: 'Upgraded version with 256GB storage.',
-        description: 'Updated product description (optional)',
-    })
+    @ApiPropertyOptional({ example: 'Upgraded version with 256GB storage.' })
     @IsOptional()
     @IsString()
     description?: string;
 
-    @ApiPropertyOptional({
-        example: 799.99,
-        description: 'Updated product price (optional)',
-        type: Number,
-    })
+    @ApiPropertyOptional({ example: 799.99 })
     @IsOptional()
     @IsNumber()
     price?: number;
 
-    @ApiPropertyOptional({
-        example: 'ELEC-12345-PRO',
-        description: 'Updated SKU (optional)',
-    })
+    @ApiPropertyOptional({ example: 899.99 })
+    @IsOptional()
+    @IsNumber()
+    listPrice?: number;
+
+    @ApiPropertyOptional({ example: 'INR' })
+    @IsOptional()
+    @IsString()
+    currency?: string;
+
+    @ApiPropertyOptional({ example: 'ELEC-12345-PRO' })
     @IsOptional()
     @IsString()
     sku?: string;
 
-    @ApiPropertyOptional({
-        example: 100,
-        description: 'Updated quantity available (optional)',
-        type: Number,
-    })
+    @ApiPropertyOptional({ example: 100 })
     @IsOptional()
     @IsNumber()
     quantity?: number;
 
-    @ApiPropertyOptional({
-        example: 2,
-        description: 'Updated category ID (optional)',
-        type: Number,
-    })
+    @ApiPropertyOptional({ example: 'e1c5f42b-0f94-4a2c-937d-1c0a1ad4f5f9' })
+    @IsOptional()
+    @IsString()
+    categoryId?: string;
+
+    @ApiPropertyOptional({ type: [ImageDto] })
+    @IsOptional()
+    @IsArray()
+    @ValidateNested({ each: true })
+    @Type(() => ImageDto)
+    images?: ImageDto[];
+
+    @ApiPropertyOptional({ type: DimensionsDto })
+    @IsOptional()
+    @ValidateNested()
+    @Type(() => DimensionsDto)
+    dimensions?: DimensionsDto;
+
+    @ApiPropertyOptional({ example: 0.5 })
     @IsOptional()
     @IsNumber()
-    categoryId?: string;
+    weight?: number;
+
+    @ApiPropertyOptional({ example: '2025-11-01T00:00:00Z' })
+    @IsOptional()
+    @IsISO8601()
+    availableFrom?: string;
+
+    @ApiPropertyOptional({ example: false })
+    @IsOptional()
+    @IsBoolean()
+    isCustomizable?: boolean;
+
+    @ApiPropertyOptional({ example: ['decor', 'gifts'] })
+    @IsOptional()
+    @IsArray()
+    @IsString({ each: true })
+    tags?: string[];
+
+    @ApiPropertyOptional({ example: { color: 'red', material: 'marble' } })
+    @IsOptional()
+    @IsObject()
+    attributes?: Record<string, string>;
 }
