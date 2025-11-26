@@ -10,4 +10,5 @@ export default registerAs('app', () => ({
   },
   prefix: process.env.API_PREFIX || 'api',
   version: process.env.API_VERSION || 'v1',
+  CORS_ORIGINS: process.env.CORS_ORIGINS || 'http://localhost:4000',
 }));
