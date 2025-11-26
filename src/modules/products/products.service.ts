@@ -27,11 +27,11 @@ export class ProductsService {
       },
     }));
 
-    const product = new this.productModel({ ...rest, category: category.id, images, });
+    const product = new this.productModel({ ...rest, category: category._id, images, });
     const savedProduct = await product.save();
 
     // optionally link product to category
-    category.products.push(savedProduct.id);
+    category.products.push(savedProduct._id);
     await category.save();
 
     return savedProduct.populate('category');
@@ -62,7 +62,7 @@ export class ProductsService {
         },
       }));
 
-      updateProductDto['images'] = images;
+      updateProductDto = { ...updateProductDto, images: files };
     }
     if (categoryId) {
       const category = await this.categoryModel.findById(categoryId);
@@ -121,7 +121,8 @@ export class ProductsService {
   }
 
   async findAllCategories(): Promise<Category[]> {
-    return this.categoryModel.find().populate('products').exec();
+    return this.categoryModel.find().select('_id name').lean().exec();
+    // return this.categoryModel.find().populate('products').exec();
   }
 
   async findCategoryById(id: string): Promise<Category> {

@@ -16,7 +16,7 @@ export class StripePaymentStrategy implements IPaymentStrategy {
         private readonly configService: ConfigService,
     ) {
         const stripeKey = this.configService.get<string>('STRIPE_SECRET_KEY');
-        this.stripe = new Stripe(stripeKey, { apiVersion: '2025-09-30.clover' });
+        this.stripe = new Stripe(stripeKey, { apiVersion: '2025-09-30.clover' } as any);
     }
 
     async createPayment(order: Order): Promise<Payment> {

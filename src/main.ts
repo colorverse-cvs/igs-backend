@@ -15,6 +15,16 @@ async function bootstrap() {
   const prefix = `${cfg.get<string>('app.prefix')}/${cfg.get<string>('app.version')}`;
   const port = cfg.get<number>('app.PORT') || 3000;
 
+  // CORS configuration
+  // Set env var `app.CORS_ORIGINS` (comma-separated) to restrict origins, or leave unset/`*` to allow all.
+  const corsEnv = cfg.get<string>('app.CORS_ORIGINS') || '*';
+  const corsOptions =
+    corsEnv === '*' || !corsEnv
+      ? { origin: true, credentials: true } // allow any origin (origin: true is recommended when credentials: true)
+      : { origin: corsEnv.split(',').map((s) => s.trim()), credentials: true };
+
+  app.enableCors(corsOptions);
+
   // ✅ Set global prefix for all APIs
   app.setGlobalPrefix(prefix);
 

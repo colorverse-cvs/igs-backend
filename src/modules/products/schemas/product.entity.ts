@@ -90,8 +90,14 @@ export class Product extends Document {
   @Prop({ type: Number, default: 0 })
   quantity: number;
 
+  @Prop({ type: Number, default: 0, min: 0 })
+  stock: number; // available inventory
+  
   @Prop({ type: Boolean, default: true })
   inStock: boolean;
+
+  @Prop({ type: Number, default: 0, min: 0, max: 100 })
+  discount: number; // discount percentage
 
   @Prop({ type: Boolean, default: false })
   isFeatured: boolean;

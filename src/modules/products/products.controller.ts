@@ -21,7 +21,7 @@ export class ProductsController {
     return this.productsService.findAllProducts();
   }
 
-  @Get(':id')
+  @Get(':id([0-9a-fA-F]{24})')
   @ApiOperation({ summary: 'Get product by ID' })
   @ApiParam({ name: 'id', description: 'UUID of the product', example: 'b6a8e7a0-5e1d-4c8e-a512-34f3cbd6e0a1' })
   @ApiResponse({ status: 200, description: 'Product found.' })
@@ -64,7 +64,7 @@ export class ProductsController {
     return this.productsService.findAllCategories();
   }
 
-  @Get('categories/:id')
+  @Get('categories/:id([0-9a-fA-F]{24})')
   @ApiOperation({ summary: 'Get category by ID' })
   @ApiParam({ name: 'id', description: 'UUID of the category', example: 'd2e12e3a-18b5-4b9c-b0b3-47ccbd22961f' })
   @ApiResponse({ status: 200, description: 'Category found.' })
@@ -94,12 +94,26 @@ export class ProductsController {
       }),
     }),
   )
-  create(@Body() createProductDto: CreateProductDto, @UploadedFiles() files: Express.Multer.File[],) {
+  create(@Body() body: any, @UploadedFiles() files: Express.Multer.File[],) {
+    console.log("body:", body);
+    const createProductDto: CreateProductDto = {
+      ...body,
+      price: parseFloat(body.price),
+      listPrice: body.listPrice ? parseFloat(body.listPrice) : undefined,
+      discount: body.discount ? parseFloat(body.discount) : undefined,
+      quantity: body.quantity ? parseInt(body.quantity) : undefined,
+      stock: parseInt(body.stock),
+      weight: body.weight ? parseFloat(body.weight) : undefined,
+      isCustomizable: body.isCustomizable === 'true' || body.isCustomizable === true,
+      tags: body.tags ? (typeof body.tags === 'string' ? body.tags.split(',') : body.tags) : [],
+      attributes: body.attributes ? (typeof body.attributes === 'string' ? JSON.parse(body.attributes) : body.attributes) : {},
+      dimensions: body.dimensions ? (typeof body.dimensions === 'string' ? JSON.parse(body.dimensions) : body.dimensions) : undefined,
+    };
     return this.productsService.createProduct(createProductDto, files);
   }
 
 
-  @Patch(':id')
+  @Patch(':id([0-9a-fA-F]{24})')
   @Roles(Role.Admin)
   @ApiOperation({ summary: 'Update a product (Admin only)' })
   @ApiParam({ name: 'id', description: 'UUID of the product' })
@@ -119,11 +133,24 @@ export class ProductsController {
   @ApiResponse({ status: 200, description: 'Product updated successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin role required' })
   @ApiResponse({ status: 404, description: 'Product not found.' })
-  update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto, @UploadedFiles() files: Express.Multer.File[],) {
+  update(@Param('id') id: string, @Body() body: any, @UploadedFiles() files: Express.Multer.File[],) {
+    const updateProductDto: UpdateProductDto = {
+      ...body,
+      price: body.price ? parseFloat(body.price) : undefined,
+      listPrice: body.listPrice ? parseFloat(body.listPrice) : undefined,
+      discount: body.discount ? parseFloat(body.discount) : undefined,
+      quantity: body.quantity ? parseInt(body.quantity) : undefined,
+      stock: body.stock ? parseInt(body.stock) : undefined,
+      weight: body.weight ? parseFloat(body.weight) : undefined,
+      isCustomizable: body.isCustomizable ? (body.isCustomizable === 'true' || body.isCustomizable === true) : undefined,
+      tags: body.tags ? (typeof body.tags === 'string' ? JSON.parse(body.tags) : body.tags) : undefined,
+      attributes: body.attributes ? (typeof body.attributes === 'string' ? JSON.parse(body.attributes) : body.attributes) : undefined,
+      dimensions: body.dimensions ? (typeof body.dimensions === 'string' ? JSON.parse(body.dimensions) : body.dimensions) : undefined,
+    };
     return this.productsService.updateProduct(id, updateProductDto, files);
   }
 
-  @Delete(':id')
+  @Delete(':id([0-9a-fA-F]{24})')
   @Roles(Role.Admin)
   @ApiOperation({ summary: 'Delete a product (Admin only)' })
   @ApiParam({ name: 'id', description: 'UUID of the product' })
@@ -144,7 +171,7 @@ export class ProductsController {
   }
 
   @Roles(Role.Admin)
-  @Patch('categories/:id')
+  @Patch('categories/:id([0-9a-fA-F]{24})')
   @ApiOperation({ summary: 'Update category details' })
   @ApiParam({ name: 'id', description: 'UUID of the category' })
   @ApiBody({ type: UpdateCategoryDto })
@@ -155,7 +182,7 @@ export class ProductsController {
   }
 
   @Roles(Role.Admin)
-  @Delete('categories/:id')
+  @Delete('categories/:id([0-9a-fA-F]{24})')
   @ApiOperation({ summary: 'Delete a category' })
   @ApiParam({ name: 'id', description: 'UUID of the category' })
   @ApiResponse({ status: 200, description: 'Category deleted successfully.' })

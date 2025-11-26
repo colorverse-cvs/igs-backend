@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsString, IsOptional, IsArray, IsUrl, ValidateNested, IsBoolean, IsISO8601, IsIn, IsObject, } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString, IsOptional, IsArray, IsUrl, ValidateNested, IsBoolean, IsISO8601, IsIn, IsObject } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
@@ -104,30 +104,36 @@ export class CreateProductDto {
   @IsString()
   readonly currency?: string;
 
+  @ApiPropertyOptional({ example: 5, minimum: 0, maximum: 100 })
+  @IsOptional()
+  @IsNumber()
+  readonly discount?: number;
+
   @ApiProperty({ example: 'MOUSE-123' })
   @IsNotEmpty()
   @IsString()
   readonly sku: string;
 
-  @ApiProperty({ example: 50 })
+  @ApiProperty({ example: 50, description: 'Stock quantity' })
   @IsNotEmpty()
   @IsNumber()
-  readonly quantity: number;
+  readonly stock: number;
 
-  @ApiProperty({ example: 'e1c5f42b-0f94-4a2c-937d-1c0a1ad4f5f9' })
+  @ApiProperty({ example: '692736712d1bdf0d5e213913' })
   @IsNotEmpty()
   @IsString()
   readonly categoryId: string;
 
   @ApiPropertyOptional({
-    type: [ImageDto],
-    description: 'Array of image metadata',
+    type: 'array',
+    items: {
+      type: 'string',
+      format: 'binary',
+    },
+    description: 'Array of image files (multipart upload, max 10 files)',
   })
   @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => ImageDto)
-  readonly images?: ImageDto[];
+  readonly images?: Express.Multer.File[];
 
   @ApiPropertyOptional({ type: DimensionsDto })
   @IsOptional()

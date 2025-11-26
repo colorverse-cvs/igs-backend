@@ -50,7 +50,18 @@ export class OrdersService {
       items: orderItems.map((item) => item._id),
     });
 
-    return order.save();
+    await order.save();
+
+    // Reduce stock for each order item
+    // for (const item of createOrderDto.items) {
+    //   await this.productsService.findByIdAndUpdate(
+    //     item.productId,
+    //     { $inc: { stock: -item.quantity } },
+    //     { new: true }
+    //   );
+    // }
+
+    return order;
   }
 
   async findAllOrders(): Promise<Order[]> {

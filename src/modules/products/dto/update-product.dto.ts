@@ -1,4 +1,4 @@
-import { IsNumber, IsOptional, IsString, IsArray, IsBoolean, IsISO8601, ValidateNested, IsObject, } from 'class-validator';
+import { IsNumber, IsOptional, IsString, IsArray, IsBoolean, IsISO8601, ValidateNested, IsObject, Min, Max } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { ImageDto, DimensionsDto } from './create-product.dto';
@@ -29,10 +29,23 @@ export class UpdateProductDto {
     @IsString()
     currency?: string;
 
+    @ApiPropertyOptional({ example: 5, minimum: 0, maximum: 100, description: 'Discount percentage (0-100)' })
+    @IsOptional()
+    @IsNumber()
+    @Min(0)
+    @Max(100)
+    discount?: number;
+
     @ApiPropertyOptional({ example: 'ELEC-12345-PRO' })
     @IsOptional()
     @IsString()
     sku?: string;
+
+    @ApiPropertyOptional({ example: 100, description: 'Available stock quantity - gets reduced on order placement' })
+    @IsOptional()
+    @IsNumber()
+    @Min(0)
+    stock?: number;
 
     @ApiPropertyOptional({ example: 100 })
     @IsOptional()
@@ -44,12 +57,16 @@ export class UpdateProductDto {
     @IsString()
     categoryId?: string;
 
-    @ApiPropertyOptional({ type: [ImageDto] })
+    @ApiPropertyOptional({
+      type: 'array',
+      items: {
+        type: 'string',
+        format: 'binary',
+      },
+      description: 'Array of image files (multipart upload, max 10 files)',
+    })
     @IsOptional()
-    @IsArray()
-    @ValidateNested({ each: true })
-    @Type(() => ImageDto)
-    images?: ImageDto[];
+    readonly images?: Express.Multer.File[];
 
     @ApiPropertyOptional({ type: DimensionsDto })
     @IsOptional()
