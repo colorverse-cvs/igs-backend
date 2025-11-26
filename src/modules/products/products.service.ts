@@ -18,7 +18,7 @@ export class ProductsService {
     if (!category) throw new NotFoundException('Category not found');
 
     const images = files?.map((file, index) => ({
-      url: `/uploads/products/${file.filename}`,
+      url: `/public/products/${file.filename}`,
       isPrimary: index === 0,
       position: index,
       meta: {
@@ -53,7 +53,7 @@ export class ProductsService {
     let images: { url: string; isPrimary: boolean; position: number; meta: { originalName: string; mimeType: string; }; }[] | undefined;
     if (files?.length) {
       images = files.map((file, index) => ({
-        url: `/uploads/products/${file.filename}`,
+        url: `/public/products/${file.filename}`,
         isPrimary: index === 0,
         position: index,
         meta: {
