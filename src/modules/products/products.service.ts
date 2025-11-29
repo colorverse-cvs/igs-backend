@@ -38,7 +38,8 @@ export class ProductsService {
   }
 
   async findAllProducts(): Promise<Product[]> {
-    return this.productModel.find().populate('category').exec();
+    return this.productModel.find().exec();
+    //return this.productModel.find().populate('category').exec();
   }
 
   async findProductById(id: string): Promise<Product> {
