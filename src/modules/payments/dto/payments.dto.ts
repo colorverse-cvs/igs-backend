@@ -6,8 +6,8 @@ export class PaymentIntentResponseDto {
     example: 'pi_3Pxxx',
     description: 'Unique identifier for the payment intent',
   })
-  @IsString()
-  id: string;
+  // @IsString()
+  // id: string;
 
   @ApiProperty({
     example: 12000,
@@ -43,8 +43,8 @@ export class StripeWebhookEventDto {
     example: 'evt_1Pxxxx',
     description: 'Stripe event unique ID',
   })
-  @IsString()
-  id: string;
+  // @IsString()
+  // id: string;
 
   @ApiProperty({
     example: 'payment_intent.succeeded',

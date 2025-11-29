@@ -1,12 +1,12 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import { v4 as uuidv4 } from 'uuid';
+// import { v4 as uuidv4 } from 'uuid';
 import { User } from '../../users/schemas/user.entity';
 
 @Schema({ timestamps: { createdAt: true, updatedAt: false } })
 export class Order extends Document {
-  @Prop({ type: String, default: uuidv4, unique: true })
-  id: string;
+  // @Prop({ type: String, default: uuidv4, unique: true })
+  // id: string;
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   user: User;

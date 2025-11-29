@@ -9,4 +9,11 @@ export class CreateCategoryDto {
   @IsNotEmpty({ message: 'Category name is required' })
   @IsString({ message: 'Category name must be a string' })
   readonly name: string;
+
+  @ApiProperty({
+    example: 'Description for the Electronics category',
+    description: 'description of the category',
+  })
+  @IsString({ message: 'Description name must be a string' })
+  readonly description: string;
 }

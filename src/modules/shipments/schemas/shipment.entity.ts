@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
-import { v4 as uuidv4 } from 'uuid';
+// import { v4 as uuidv4 } from 'uuid';
 
 export type ShipmentDocument = Shipment & Document;
 
@@ -15,8 +15,8 @@ export enum ShipmentStatus {
 
 @Schema({ timestamps: true })
 export class Shipment {
-    @Prop({ type: String, default: uuidv4, })
-    id: string;
+    // @Prop({ type: String, default: uuidv4, })
+    // id: string;
 
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Order', required: true })
     order: mongoose.Types.ObjectId;

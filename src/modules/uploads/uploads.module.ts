@@ -33,7 +33,3 @@ import { v4 as uuidv4 } from 'uuid';
   exports: [UploadService],
 })
 export class UploadsModule {}
-
-// import { v4 as uuidv4 } from 'uuid';
-// @Prop({ type: String, default: uuidv4, })
-// id: string;

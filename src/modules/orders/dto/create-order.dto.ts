@@ -4,8 +4,8 @@ import { Type } from 'class-transformer';
 
 class OrderItemDto {
     @ApiProperty({
-        example: 'f2a4a821-4f3b-4dfb-bd03-13461a1c7a9f',
-        description: 'UUID of the product being ordered',
+        example: '64b2a8e4c58c8a8f1f8e4b12',
+        description: 'ID of the product being ordered',
     })
     @IsNotEmpty()
     productId: string;
@@ -21,8 +21,8 @@ class OrderItemDto {
 
 export class CreateOrderDto {
     @ApiProperty({
-        example: '6d4427f5-2a0c-4976-b1f4-95d1c67acaf5',
-        description: 'UUID of the user placing the order',
+        example: '64b2a8e4c58c8a8f1f8e4b12',
+        description: 'ID of the user placing the order',
     })
     @IsNotEmpty()
     userId: string;

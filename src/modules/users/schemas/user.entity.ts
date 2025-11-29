@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-import { v4 as uuidv4 } from 'uuid';
+// import { v4 as uuidv4 } from 'uuid';
 import { Address, AddressSchema } from './address.entity';
 import { ProfileDto } from '../dto';
 
@@ -9,8 +9,8 @@ export type UserDocument = User & Document;
 @Schema({ timestamps: true })
 // @Schema({ timestamps: true, _id: false }) // disable default ObjectId
 export class User extends Document {
-  @Prop({ default: () => uuidv4() })
-  id: string; // UUID instead of Mongo ObjectId
+  // @Prop({ default: () => uuidv4() })
+  // id: string; // UUID instead of Mongo ObjectId
 
   @Prop({ required: true, unique: true })
   email: string;

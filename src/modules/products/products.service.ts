@@ -17,7 +17,7 @@ export class ProductsService {
     const category = await this.categoryModel.findById(categoryId);
     if (!category) throw new NotFoundException('Category not found');
 
-    const images = files?.map((file, index) => ({
+    let images = files?.map((file, index) => ({
       url: `/public/products/${file.filename}`,
       isPrimary: index === 0,
       position: index,
@@ -27,19 +27,30 @@ export class ProductsService {
       },
     }));
 
+    if (!images || images.length === 0) {
+      images = [{
+        url: `/public/products/product_placeholder.jpg`,
+        isPrimary: true,
+        position: 0,
+        meta: {
+          originalName: 'product_placeholder.jpg',
+          mimeType: 'image/jpeg',
+        },
+      }];
+    }
     const product = new this.productModel({ ...rest, category: category._id, images, });
     const savedProduct = await product.save();
 
     // optionally link product to category
-    category.products.push(savedProduct._id);
-    await category.save();
+    // category.products.push(savedProduct._id);
+    // await category.save();
 
-    return savedProduct.populate('category');
+    return savedProduct.populate({ path: 'category', select: '_id name' });
   }
 
   async findAllProducts(): Promise<Product[]> {
-    return this.productModel.find().exec();
-    //return this.productModel.find().populate('category').exec();
+    // return this.productModel.find().exec();
+    return this.productModel.find().populate({ path: 'category', select: '_id name' }).exec();
   }
 
   async findProductById(id: string): Promise<Product> {
@@ -78,13 +89,13 @@ export class ProductsService {
 
   async removeProduct(id: string): Promise<void> {
     const product = await this.findProductById(id);
-    await this.productModel.deleteOne({ id: id });
+    await this.productModel.deleteOne({ _id: id });
 
     // Also remove from category’s products array (optional cleanup)
-    await this.categoryModel.updateOne(
-      { id: product.category },
-      { $pull: { products: id } },
-    );
+    // await this.categoryModel.updateOne(
+    //   { id: product.category },
+    //   { $pull: { products: id } },
+    // );
   }
 
   async searchProducts(query: string): Promise<Product[]> {
@@ -127,7 +138,7 @@ export class ProductsService {
   }
 
   async findCategoryById(id: string): Promise<Category> {
-    const category = await this.categoryModel.findById(id).populate('products').exec();
+    const category = await this.categoryModel.findById(id).exec();
     if (!category) throw new NotFoundException('Category not found');
     return category;
   }

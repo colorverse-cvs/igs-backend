@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
-import { v4 as uuidv4 } from 'uuid';
+// import { v4 as uuidv4 } from 'uuid';
 import { Order } from '../../orders/schemas/order.entity';
 
 export enum PaymentMethod {
@@ -20,8 +20,8 @@ export type PaymentDocument = Payment & Document;
 @Schema({ timestamps: true })
 export class Payment {
 
-    @Prop({ type: String, default: uuidv4, })
-    id: string;
+    // @Prop({ type: String, default: uuidv4, })
+    // id: string;
 
     @Prop({ required: true })
     paymentIntentId?: string;

@@ -23,7 +23,7 @@ export class ProductsController {
 
   @Get(':id([0-9a-fA-F]{24})')
   @ApiOperation({ summary: 'Get product by ID' })
-  @ApiParam({ name: 'id', description: 'UUID of the product', example: 'b6a8e7a0-5e1d-4c8e-a512-34f3cbd6e0a1' })
+  @ApiParam({ name: 'id', description: 'ID of the product', example: '64b2a8e4c58c8a8f1f8e4b12' })
   @ApiResponse({ status: 200, description: 'Product found.' })
   @ApiResponse({ status: 404, description: 'Product not found.' })
   findProductById(@Param('id') id: string) {
@@ -66,7 +66,7 @@ export class ProductsController {
 
   @Get('categories/:id([0-9a-fA-F]{24})')
   @ApiOperation({ summary: 'Get category by ID' })
-  @ApiParam({ name: 'id', description: 'UUID of the category', example: 'd2e12e3a-18b5-4b9c-b0b3-47ccbd22961f' })
+  @ApiParam({ name: 'id', description: 'ID of the category', example: '69274768b79aac1b75e03e7e' })
   @ApiResponse({ status: 200, description: 'Category found.' })
   @ApiResponse({ status: 404, description: 'Category not found.' })
   findCategoryById(@Param('id') id: string) {
@@ -116,7 +116,7 @@ export class ProductsController {
   @Patch(':id([0-9a-fA-F]{24})')
   @Roles(Role.Admin)
   @ApiOperation({ summary: 'Update a product (Admin only)' })
-  @ApiParam({ name: 'id', description: 'UUID of the product' })
+  @ApiParam({ name: 'id', description: 'ID of the product' })
   @ApiBody({ type: UpdateProductDto })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
@@ -153,7 +153,7 @@ export class ProductsController {
   @Delete(':id([0-9a-fA-F]{24})')
   @Roles(Role.Admin)
   @ApiOperation({ summary: 'Delete a product (Admin only)' })
-  @ApiParam({ name: 'id', description: 'UUID of the product' })
+  @ApiParam({ name: 'id', description: 'ID of the product' })
   @ApiResponse({ status: 200, description: 'Product deleted successfully.' })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin role required' })
   @ApiResponse({ status: 404, description: 'Product not found.' })
@@ -173,7 +173,7 @@ export class ProductsController {
   @Roles(Role.Admin)
   @Patch('categories/:id([0-9a-fA-F]{24})')
   @ApiOperation({ summary: 'Update category details' })
-  @ApiParam({ name: 'id', description: 'UUID of the category' })
+  @ApiParam({ name: 'id', description: 'ID of the category' })
   @ApiBody({ type: UpdateCategoryDto })
   @ApiResponse({ status: 200, description: 'Category updated successfully.' })
   @ApiResponse({ status: 404, description: 'Category not found.' })
@@ -184,7 +184,7 @@ export class ProductsController {
   @Roles(Role.Admin)
   @Delete('categories/:id([0-9a-fA-F]{24})')
   @ApiOperation({ summary: 'Delete a category' })
-  @ApiParam({ name: 'id', description: 'UUID of the category' })
+  @ApiParam({ name: 'id', description: 'ID of the category' })
   @ApiResponse({ status: 200, description: 'Category deleted successfully.' })
   @ApiResponse({ status: 404, description: 'Category not found.' })
   removeCategory(@Param('id') id: string) {

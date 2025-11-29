@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import { v4 as uuidv4 } from 'uuid';
+// import { v4 as uuidv4 } from 'uuid';
 import { Category } from './category.entity';
 
 @Schema()
@@ -59,8 +59,8 @@ export type DimensionsDocument = Dimensions & Document;
 
 @Schema({ timestamps: true })
 export class Product extends Document {
-  @Prop({ type: String, default: uuidv4, unique: true })
-  id: string;
+  // @Prop({ type: String, default: uuidv4, unique: true })
+  // id: string;
 
   @Prop({ type: String, required: true, index: true })
   name: string;
@@ -92,7 +92,7 @@ export class Product extends Document {
 
   @Prop({ type: Number, default: 0, min: 0 })
   stock: number; // available inventory
-  
+
   @Prop({ type: Boolean, default: true })
   inStock: boolean;
 
