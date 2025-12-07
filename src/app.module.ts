@@ -19,6 +19,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
 // import { RateLimitMiddleware } from './common/middleware/rate-limit.middleware';
 import { UploadsModule } from './modules/uploads/uploads.module';
 import { ShipmentsModule } from './modules/shipments/shipments.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
@@ -39,7 +40,8 @@ import { ShipmentsModule } from './modules/shipments/shipments.module';
     NotificationsModule,
     ReportsModule,
     UploadsModule,
-    ShipmentsModule
+    ShipmentsModule,
+    EventEmitterModule.forRoot(),
   ],
   providers: [
     // { provide: APP_GUARD, useClass: JwtAuthGuard },

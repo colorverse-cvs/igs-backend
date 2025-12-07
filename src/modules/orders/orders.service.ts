@@ -1,22 +1,26 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-import { Order, OrderDocument } from './schemas/order.entity';
-import { OrderItem, OrderItemDocument } from './schemas/order-item.entity';
-import { CreateOrderDto, UpdateOrderStatusDto } from './dto';
+import { Model, Types, Connection } from 'mongoose';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { ORDER_STATUSES, ALLOWED_STATUS_TRANSITIONS, OrderStatus } from './constants/order-status';
+import { Order } from './schemas/order.entity';
+import { InjectConnection } from '@nestjs/mongoose';
 import { UsersService } from '../users/users.service';
 import { ProductsService } from '../products/products.service';
+import { OrderItem } from './schemas/order-item.entity';
 
 @Injectable()
 export class OrdersService {
   constructor(
-    @InjectModel(Order.name) private readonly orderModel: Model<OrderDocument>,
-    @InjectModel(OrderItem.name) private readonly orderItemModel: Model<OrderItemDocument>,
+    @InjectModel(Order.name) private readonly orderModel: Model<Order>,
+    @InjectModel(OrderItem.name) private readonly orderItemModel: Model<OrderItem>,
+    private readonly eventEmitter: EventEmitter2,
+    @InjectConnection() private readonly connection: Connection,
     private readonly usersService: UsersService,
     private readonly productsService: ProductsService,
   ) {}
 
-  async createOrder(createOrderDto: CreateOrderDto): Promise<Order> {
+  async createOrder(createOrderDto: any): Promise<Order> {
     const { userId, items } = createOrderDto;
 
     const user = await this.usersService.findOneById(userId);
@@ -85,15 +89,132 @@ export class OrdersService {
     return order;
   }
 
-  async updateOrderStatus(id: string, updateOrderStatusDto: UpdateOrderStatusDto): Promise<Order> {
-    const order = await this.findOrderById(id);
-    order.status = updateOrderStatusDto.status;
-    return order.save();
+  async updateOrderStatus(orderId: string, newStatus: OrderStatus, reason: string | undefined, actor: any) {
+    if (!ORDER_STATUSES.includes(newStatus)) throw new BadRequestException('Invalid status');
+
+    const session = await this.connection.startSession();
+    session.startTransaction();
+    try {
+      const order = await this.orderModel.findById(orderId).session(session);
+      if (!order) throw new NotFoundException('Order not found');
+
+      const current = order.status as OrderStatus;
+      const allowed = ALLOWED_STATUS_TRANSITIONS[current] || [];
+      if (!allowed.includes(newStatus)) {
+        throw new BadRequestException(`Cannot change status from ${current} to ${newStatus}`);
+      }
+
+      // optional: role-based check
+      const actorRole = actor?.role;
+      if (newStatus === 'shipped' && actorRole !== 'admin' && actorRole !== 'logistics') {
+        throw new ForbiddenException('Not permitted to mark shipped');
+      }
+
+      // apply status change
+      order.status = newStatus;
+      order.updatedAt = new Date();
+      order.history = order.history || [];
+      order.history.push({ status: newStatus, changedBy: actor?.id ? new Types.ObjectId(actor.id) : undefined, reason, at: new Date() });
+
+      await order.save({ session });
+
+      // domain side-effects: e.g. create shipment when placed, decrement stock when placed/paid etc.
+      // emit event for other modules to handle asynchronously
+      this.eventEmitter.emit('order.status.changed', { orderId: order._id.toString(), from: current, to: newStatus, actor, reason });
+
+      await session.commitTransaction();
+      session.endSession();
+
+      return order;
+    } catch (err) {
+      await session.abortTransaction();
+      session.endSession();
+      throw err;
+    }
   }
 
   async removeOrder(id: string): Promise<void> {
     const order = await this.findOrderById(id);
     if (!order) throw new NotFoundException('Order not found');
     await this.orderModel.deleteOne({ _id: order._id }).exec();
+  }
+
+  // -----------------------
+  // New helpers for checkout flow
+  // -----------------------
+  async createPending(payload: any): Promise<Order> {
+    const { userId, items, amount, currency = 'INR', customer, cartId, sessionId, paymentMethod, } = payload;
+
+    const orderItems: any[] = [];
+    // If items contain productId, validate and create order item docs
+    for (const it of items) {
+      const product = await this.productsService.findProductById(it.product);
+      if (!product) throw new NotFoundException(`Product ${it.productId} not found`);
+
+      const price = typeof product.price === 'number' ? product.price : 0;
+      const itemTotal = (price * (it.quantity || 1));
+      const orderItem = new this.orderItemModel({
+        product: product._id,
+        quantity: it.quantity || 1,
+        price: itemTotal,
+      });
+      await orderItem.save();
+      orderItems.push(orderItem);
+    }
+    const orderData: any = {
+      items: orderItems.map(i => i._id),
+      total: amount ?? orderItems.reduce((s, oi) => s + (oi.price || 0), 0),
+      currency,
+      status: 'pending',
+      paymentMethod: paymentMethod ?? 'unknown',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    if (userId) orderData.user = new Types.ObjectId(userId);
+    if (cartId) orderData.cartId = cartId;
+    if (sessionId) orderData.sessionId = sessionId;
+    if (customer) orderData.customer = customer;
+
+    const order = new this.orderModel(orderData);
+    await order.save();
+    return order;
+  }
+
+  async updatePaymentMeta(orderId: string, meta: Record<string, any>): Promise<Order> {
+    if (!Types.ObjectId.isValid(orderId)) throw new BadRequestException('Invalid order ID');
+    const order = await this.orderModel.findById(orderId);
+    if (!order) throw new NotFoundException('Order not found');
+
+    order.paymentMeta = {
+      ...((order as any).paymentMeta || {}),
+      ...meta,
+    };
+    order.updatedAt = new Date();
+    return order.save();
+  }
+
+  async markAsPlaced(orderId: string): Promise<Order> {
+    if (!Types.ObjectId.isValid(orderId)) throw new BadRequestException('Invalid order ID');
+    const order = await this.orderModel.findById(orderId).populate({ path: 'items', populate: { path: 'product' } });
+    if (!order) throw new NotFoundException('Order not found');
+
+    order.status = 'placed';
+    order.updatedAt = new Date();
+
+    // if (Array.isArray(order.items)) {
+    //   for (const oi of (order.items as any[])) {
+    //     try {
+    //       const pid = (oi.product as any)?._id ?? oi.product;
+    //       if (pid) {
+    //         await this.productsService.decrementStock(pid.toString(), (oi.quantity || 0));
+    //       }
+    //     } catch (err) {
+    //       // ignore stock errors here; log if you have a logger
+    //     }
+    //   }
+    // }
+
+    return order.save();
   }
 }

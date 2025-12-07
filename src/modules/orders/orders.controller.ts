@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Patch, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch, Delete, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto, UpdateOrderStatusDto } from './dto';
@@ -45,8 +45,10 @@ export class OrdersController {
   @ApiBody({ type: UpdateOrderStatusDto })
   @ApiResponse({ status: 200, description: 'Order status updated successfully', type: Order })
   @ApiResponse({ status: 404, description: 'Order not found' })
-  updateOrderStatus(@Param('id') id: string, @Body() updateOrderStatusDto: UpdateOrderStatusDto) {
-    return this.ordersService.updateOrderStatus(id, updateOrderStatusDto);
+  async updateStatus(@Req() req: Request, @Param('id') id: string, @Body() dto: UpdateOrderStatusDto) {
+    const actor = (req as any).user;
+    const order = await this.ordersService.updateOrderStatus(id, dto.status, dto.reason, actor);
+    return order;
   }
 
   @Delete(':id')

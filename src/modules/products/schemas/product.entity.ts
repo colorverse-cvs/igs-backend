@@ -48,8 +48,14 @@ class Dimensions {
 
   // categories matching your screenshot filters:
   // small: under 6 in, medium: 6 - 10 in, large: above 10 in
-  @Prop({ type: String, enum: ['small', 'medium', 'large', 'one-size'], default: 'one-size', index: true })
-  sizeCategory?: 'small' | 'medium' | 'large' | 'one-size';
+  @Prop({
+    type: String,
+    enum: ['xx-small', 'x-small', 'small', 'medium', 'large', 'x-large', 'xx-large', 'one-size'],
+    default: 'one-size',
+    index: true,
+  })
+  sizeCategory?: 'xx-small' | 'x-small' | 'small' | 'medium' | 'large' | 'x-large' | 'xx-large' | 'one-size';
+
 
   @Prop({ type: String, default: 'cm' })
   unit?: string;

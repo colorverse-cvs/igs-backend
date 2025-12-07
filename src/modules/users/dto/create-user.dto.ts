@@ -1,7 +1,9 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsArray, IsEmail, IsNotEmpty, IsOptional, IsString, MinLength, ValidateNested } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { AddressDto } from './address.dto';
 import { ProfileDto } from './profile.dto';
+import { Type } from 'class-transformer';
+import { PhoneDto } from './phone.dto';
 
 export class CreateUserDto {
   @ApiProperty({
@@ -45,4 +47,11 @@ export class CreateUserDto {
   @ApiPropertyOptional({ type: [ProfileDto], required: false })
   @IsOptional()
   profile?: ProfileDto;
+
+  @ApiPropertyOptional({ type: [PhoneDto], description: 'Phone numbers (India format). Use isPrimary to mark primary.' })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => PhoneDto)
+  phones?: PhoneDto[];
 }

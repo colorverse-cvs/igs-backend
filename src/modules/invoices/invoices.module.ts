@@ -1,13 +1,14 @@
 import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
 import { InvoicesService } from './invoices.service';
-import { InvoicesController } from './invoices.controller';
-// import { MongooseModule } from '@nestjs/mongoose';
-// import { Order, OrderSchema } from '../orders/schemas/order.entity';
-import { OrdersModule } from '../orders/orders.module';
+import { Order, OrderSchema } from '../orders/schemas/order.entity';
 
 @Module({
-  imports: [OrdersModule],
-  controllers: [InvoicesController],
+  imports: [
+    MongooseModule.forFeature([{ name: Order.name, schema: OrderSchema }]),
+    // optionally import OrdersModule if you need OrdersService:
+    // OrdersModule,
+  ],
   providers: [InvoicesService],
   exports: [InvoicesService],
 })

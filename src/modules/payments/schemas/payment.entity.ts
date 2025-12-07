@@ -5,15 +5,24 @@ import { Order } from '../../orders/schemas/order.entity';
 
 export enum PaymentMethod {
     STRIPE = 'stripe',
-    CASH_ON_DELIVERY = 'cod'
+    CASH_ON_DELIVERY = 'cod',
+    RAZORPAY = 'razorpay',
 }
 
 export enum PaymentStatus {
-    PENDING = 'pending',
-    SUCCEEDED = 'succeeded',
-    FAILED = 'failed',
-    REFUNDED = 'refunded'
+  CREATED = 'created',          // Order created but no payment attempt yet
+  PENDING = 'pending',          // Payment initiated, waiting for confirmation
+  REQUIRES_ACTION = 'requires_action', // OTP / 3D secure required (future-use)
+  SUCCEEDED = 'succeeded',      // Payment captured successfully
+  FAILED = 'failed',            // Payment attempt failed
+  CANCELLED = 'cancelled',      // User canceled before payment
+  REFUNDED = 'refunded',        // Fully refunded
+  PARTIALLY_REFUNDED = 'partially_refunded', // Partial refund support
+  DISPUTED = 'disputed',        // Chargeback/dispute raised
+  EXPIRED = 'expired',           // Payment not completed in time
+  CAPTURED = 'captured',        // 'CAPTURED' means the payment has been successfully charged and the amount
 }
+
 
 export type PaymentDocument = Payment & Document;
 

@@ -6,6 +6,9 @@ import { Cart, CartSchema } from './schemas/cart.entity';
 import { CartItem, CartItemSchema } from './schemas/cart-item.entity';
 import { ProductsModule } from '../products/products.module';
 import { UsersModule } from '../users/users.module';
+import { PaymentsModule } from '../payments/payments.module';
+import { OrdersModule } from '../orders/orders.module';
+import { SessionsModule } from '../sessions/sessions.module';
 
 @Module({
   imports: [
@@ -15,6 +18,9 @@ import { UsersModule } from '../users/users.module';
     ]),
     ProductsModule,
     UsersModule,
+    PaymentsModule,
+    OrdersModule,
+    SessionsModule,
   ],
   providers: [CartService],
   controllers: [CartController],

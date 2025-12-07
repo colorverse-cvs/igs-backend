@@ -9,19 +9,21 @@ export class OrderItem extends Document {
   // @Prop({ type: String, default: uuidv4, unique: true })
   // id: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'Order', required: true })
-  order: Order;
+  // make order optional because items are created before attaching to an order
+  @Prop({ type: Types.ObjectId, ref: 'Order', required: false, index: true })
+  order?: Order | Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'Product', required: true })
-  product: Product;
+  product: Product | Types.ObjectId;
 
   @Prop({ type: Number, required: true })
   quantity: number;
 
+  // price for this item (in base currency unit, e.g. rupees) or store smallest unit consistency with Order.total
   @Prop({ type: Number, required: true })
   price: number;
 }
 
-export type OrderItemDocument =  OrderItem & Document;
+export type OrderItemDocument = OrderItem & Document;
 
 export const OrderItemSchema = SchemaFactory.createForClass(OrderItem);
