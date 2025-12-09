@@ -18,7 +18,7 @@ export class OrdersService {
     @InjectConnection() private readonly connection: Connection,
     private readonly usersService: UsersService,
     private readonly productsService: ProductsService,
-  ) {}
+  ) { }
 
   async createOrder(createOrderDto: any): Promise<Order> {
     const { userId, items } = createOrderDto;
@@ -48,7 +48,7 @@ export class OrdersService {
     }
 
     const order = new this.orderModel({
-      user: user._id,
+      user: user?._id,
       status: 'placed',
       total,
       items: orderItems.map((item) => item._id),
@@ -217,4 +217,21 @@ export class OrdersService {
 
     return order.save();
   }
+
+  async findUserOrders(userId: string): Promise<Order[]> {
+    const order = await this.orderModel
+      .find({ user: userId })   
+      .populate('user')
+      .populate({
+        path: 'items',
+        populate: { path: 'product' }
+      })
+      .sort({ createdAt: -1 }) 
+      .exec();
+
+    if (!order) throw new NotFoundException('Order not found');
+
+    return order
+  }
+
 }

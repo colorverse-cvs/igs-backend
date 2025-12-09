@@ -32,7 +32,7 @@ export class WishlistService {
     }
 
     const wishlistItem = new this.wishlistModel({
-      user: user._id,
+      user: user?._id,
       product: product._id,
     });
 

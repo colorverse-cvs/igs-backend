@@ -43,7 +43,7 @@ export class AuthService {
 
   // main login: returns access + refresh tokens
   async login(user: User): Promise<UserResponseDto> {
-    const userId = user._id ? user._id.toString() : user.id || user._id;
+    const userId = user?._id ? user?._id.toString() : user.id || user?._id;
     if (!userId) throw new BadRequestException('Invalid user object');
 
     const accessToken = this.createAccessToken({ sub: userId, role: user.role, email: user.email });

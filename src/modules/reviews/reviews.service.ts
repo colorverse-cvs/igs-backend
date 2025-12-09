@@ -23,7 +23,7 @@ export class ReviewsService {
 
     const review = new this.reviewModel({
       ...createReviewDto,
-      user: new Types.ObjectId(user._id),
+      user: new Types.ObjectId(user?._id),
       product: new Types.ObjectId(product._id),
     });
 

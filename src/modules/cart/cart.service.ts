@@ -52,7 +52,7 @@ export class CartService {
     if (!cart) {
       const user = userId ? await this.usersService.findOneById(userId) : undefined;
       const cartData: any = { items: [] };
-      if (user) cartData.user = user._id;
+      if (user) cartData.user = user?._id;
       if (sessionId) cartData.sessionId = sessionId;
       cart = new this.cartModel(cartData);
       await cart.save();

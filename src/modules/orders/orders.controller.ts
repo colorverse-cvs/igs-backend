@@ -1,15 +1,16 @@
-import { Controller, Get, Post, Body, Param, Patch, Delete, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch, Delete, Req, UseGuards, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto, UpdateOrderStatusDto } from './dto';
 import { Order } from './schemas/order.entity';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/role.enum';
+// import { JwtAuthGuard } from 'src/common/guards/auth.guard';
 
 @ApiTags('Orders')
 @Controller('orders')
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) {}
+  constructor(private readonly ordersService: OrdersService) { }
 
   @Post()
   @ApiOperation({ summary: 'Create a new order' })
@@ -28,7 +29,7 @@ export class OrdersController {
     return this.ordersService.findAllOrders();
   }
 
-  @Get(':id')
+  @Get(':id([0-9a-fA-F]{24})')
   @Roles(Role.Admin)
   @ApiOperation({ summary: 'Get a specific order by ID' })
   @ApiParam({ name: 'id', type: String, description: 'Order ID (UUID or ObjectId)' })
@@ -60,4 +61,17 @@ export class OrdersController {
   removeOrder(@Param('id') id: string) {
     return this.ordersService.removeOrder(id);
   }
+
+  @Get('my')
+  // @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Get orders of the logged-in user' })
+  @ApiResponse({ status: 200, description: 'List of user orders', type: [Order] })
+  async getMyOrders(@Req() req: any) {
+    const userId = (req as any).user?._id;
+    if (!userId) {
+      throw new BadRequestException('User not authenticated');
+    }
+    return this.ordersService.findUserOrders(userId);
+  }
+
 }
