@@ -1,6 +1,6 @@
 // src/users/dto/profile.dto.ts
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsDateString, IsEnum, IsOptional, IsString } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsDateString, IsEnum, IsNotEmpty, IsOptional, IsString, Matches } from 'class-validator';
 
 export enum Gender {
   Male = 'male',
@@ -36,4 +36,10 @@ export class ProfileDto {
   @IsOptional()
   @IsDateString()
   dob?: string;
+
+  @ApiProperty({ example: '+919876543210', description: 'Indian mobile number in E.164 format (+91XXXXXXXXXX)' })
+  @IsNotEmpty()
+  @IsString()
+  @Matches(/^\+91[6-9]\d{9}$/, { message: 'Invalid Indian mobile number. Use E.164: +91XXXXXXXXXX' })
+  number: string;
 }

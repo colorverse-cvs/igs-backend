@@ -48,7 +48,7 @@ export class CartController {
   @ApiResponse({ status: 200, description: 'Cart item quantity successfully updated', })
   async updateItem(@Req() req: Request, @Res() res: Response, @Param('itemId') itemId: string, @Body() updateCartItemDto: UpdateCartItemDto,) {
     const userId = (req.user as any)?.id || (req.user as any)?._id;
-    const sessionId = userId ? undefined : this.ensureSessionId(req, res);
+    const sessionId = userId ? undefined : this.ensureSessionId(req, res); //'d2a182cd-a30e-437a-a85e-4827bf6a2b04'
     const cart = await this.cartService.updateItem(userId, sessionId, itemId, updateCartItemDto);
     return res.json(cart);
   }
@@ -89,23 +89,24 @@ export class CartController {
 
   @Post('checkout')
   @ApiOperation({ summary: 'Perform checkout and clear the user cart' })
+  @ApiBody({ type: CheckoutDto })
   @ApiResponse({ status: 200, description: 'Checkout successful, cart cleared', })
   async checkout(@Req() req: Request, @Res() res: Response, @Body() body: CheckoutDto) {
     const user = (req as any).user;
-    const userId = user?.id || user?._id;
-    const sessionId = 'd2a182cd-a30e-437a-a85e-4827bf6a2b04'// userId ? undefined : this.ensureSessionId(req, res);
-    body = {
-      name: body.name || "test user",
-      email: body.email || "abc@gmail.com",
-      phone: body.phone || "+911234567890",
-      address: body.address || {
-        line1: "line 1",
-        city: "city",
-        state: "state",
-        postalCode: "123456", 
-      },
-      paymentMethod: body.paymentMethod || 'razorpay',
-    }
+    const userId = user?._id || user?.id;
+    const sessionId = userId ? undefined : this.ensureSessionId(req, res);
+    // body = {
+    //   name: body.name || "test user",
+    //   email: body.email || "abc@gmail.com",
+    //   phone: body.phone || "+911234567890",
+    //   address: body.address || {
+    //     line1: "line 1",
+    //     city: "city",
+    //     state: "state",
+    //     postalCode: "123456", 
+    //   },
+    //   paymentMethod: body.paymentMethod || 'razorpay',
+    // }
     const result = await this.cartService.checkout(userId, sessionId, body);
     return res.json(result);
   }

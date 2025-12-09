@@ -6,15 +6,15 @@ import { PhoneDto } from './phone.dto';
 import { Type } from 'class-transformer';
 
 export class UpdateUserDto {
-  @ApiPropertyOptional({
-    example: 'newPassword456',
-    description: 'Updated password (minimum 6 characters)',
-    minLength: 6,
-  })
-  @IsOptional()
-  @IsString()
-  @MinLength(6)
-  password?: string;
+  // @ApiPropertyOptional({
+  //   example: 'newPassword456',
+  //   description: 'Updated password (minimum 6 characters)',
+  //   minLength: 6,
+  // })
+  // @IsOptional()
+  // @IsString()
+  // @MinLength(6)
+  // password?: string;
 
   @ApiProperty({ example: 'John', required: false })
   @IsOptional()

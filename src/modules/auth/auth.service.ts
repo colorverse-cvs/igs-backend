@@ -1,10 +1,10 @@
-import { Injectable, UnauthorizedException, BadRequestException, ConflictException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
-import { randomBytes } from 'crypto';
+import { createHash, randomBytes } from 'crypto';
 import { RefreshToken, RefreshTokenDocument } from './schemas/refresh-token.entity';
 import { UsersService } from '../users/users.service';
 import { CreateUserDto } from '../users/dto';
@@ -42,7 +42,7 @@ export class AuthService {
   }
 
   // main login: returns access + refresh tokens
-  async login(user: User): Promise<UserResponseDto>{
+  async login(user: User): Promise<UserResponseDto> {
     const userId = user._id ? user._id.toString() : user.id || user._id;
     if (!userId) throw new BadRequestException('Invalid user object');
 
@@ -165,4 +165,52 @@ export class AuthService {
     await this.refreshModel.deleteMany({ user: new Types.ObjectId(userId) });
     return { success: true };
   }
+
+
+  async forgotPassword(email: string) {
+    const user = await this.usersService.findOneByEmail(email);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Generate secure token
+    const token = randomBytes(32).toString('hex');
+
+    // Save hashed token to DB
+    user.resetPasswordToken = createHash('sha256').update(token).digest('hex');
+    user.resetPasswordExpires = Date.now() + 1000 * 60 * 15; // 15 minutes
+    await user.save();
+
+    // TODO: Send email — placeholder
+    // await emailService.sendResetLink(user.email, token);
+
+    return {
+      message: 'Reset link generated',
+      resetToken: token, // ← You can show token for testing
+    };
+  }
+
+  async resetPassword(dto: { token: string; newPassword: string }) {
+    const { token, newPassword } = dto;
+    const hashedToken = createHash('sha256').update(token).digest('hex');
+
+    const user = await this.usersService.findOneByField({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: { $gt: Date.now() }, // Check expiry
+    });
+
+    if (!user) {
+      throw new BadRequestException('Invalid or expired reset token');
+    }
+
+    user.password = newPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+
+    await user.save();
+
+    return { message: 'Password updated successfully' };
+  }
+
 }

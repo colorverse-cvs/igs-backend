@@ -55,6 +55,13 @@ export class User extends Document {
   // Add phones array to store any number of phone entries.
   @Prop({ type: [PhoneSchema], default: [] })
   phones?: Phone[];
+
+  @Prop()
+  resetPasswordToken?: string;
+
+  @Prop()
+  resetPasswordExpires?: number;
+
 }
 export const UserSchema = SchemaFactory.createForClass(User);
 

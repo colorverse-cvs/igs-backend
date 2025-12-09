@@ -37,12 +37,20 @@ export class UsersService {
     return this.userModel.findOne({ id: userId }).exec();
   }
 
+  async findOneByField(filter: Record<string, any>) {
+    if (!filter || typeof filter !== 'object') {
+      throw new Error("Invalid filter object");
+    }
+
+    return this.userModel.findOne(filter);
+  }
+
   async findAll(): Promise<User[] | null> {
     return this.userModel.find().exec();
   }
 
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
- 
+
     if (!Types.ObjectId.isValid(id)) {
       throw new NotFoundException(`Invalid user ID: ${id}`);
     }
@@ -52,11 +60,11 @@ export class UsersService {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
 
-    const { password, profile, addresses, ...rest } = updateUserDto;
+    const {profile, addresses, ...rest } = updateUserDto;
 
-    if (password) {
-      user.password = await bcrypt.hash(password, 10);
-    }
+    // if (password) {
+    //   user.password = await bcrypt.hash(password, 10);
+    // }
 
     if (profile) {
       user.profile = { ...user.profile, ...profile };
