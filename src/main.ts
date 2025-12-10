@@ -7,6 +7,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { join } from 'path';
 import * as express from 'express';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -24,6 +25,8 @@ async function bootstrap() {
       : { origin: corsEnv.split(',').map((s) => s.trim()), credentials: true };
 
   app.enableCors(corsOptions);
+
+  app.use(cookieParser());
 
   // ✅ Set global prefix for all APIs
   app.setGlobalPrefix(prefix);
