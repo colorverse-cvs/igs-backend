@@ -32,7 +32,9 @@ export class UsersController {
   @ApiOperation({ summary: 'Get logged-in user profile' })
   @ApiResponse({ status: 200, description: 'Returns current user profile' })
   async getProfile(@Req() req: Request) {
-    return req.user;
+    const user = req.user as any;
+    const id = user._id;
+    return  this.usersService.findOneById(id);
   }
 
   @UseGuards(JwtAuthGuard)
