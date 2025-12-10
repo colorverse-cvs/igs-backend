@@ -34,7 +34,7 @@ export class UsersService {
   }
 
   async findOneById(userId: string): Promise<User | null> {
-    return this.userModel.findOne({ id: userId }).exec();
+    return this.userModel.findById(userId).exec();
   }
 
   async findOneByField(filter: Record<string, any>) {

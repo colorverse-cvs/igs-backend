@@ -59,6 +59,7 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document, {
     swaggerOptions: {
       persistAuthorization: true, // keeps Bearer token in Swagger UI
+      withCredentials: true // allow swagger to send cookies
     },
   });
 

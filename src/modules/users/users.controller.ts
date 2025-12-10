@@ -42,7 +42,7 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'Profile updated successfully' })
   async updateProfile(@Req() req: Request, @Body() updateUserDto: UpdateUserDto) {
     const user = req.user as any;
-    await this.usersService.update(user.id, updateUserDto);
+    await this.usersService.update(user._id, updateUserDto);
     return this.usersService.findOneByEmail(user.email);
   }
 
@@ -53,7 +53,7 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'User deleted successfully' })
   async deleteProfile(@Req() req: Request) {
     const user = req.user as any;
-    await this.usersService.remove(user.id);
+    await this.usersService.remove(user._id);
   }
 
   @Get(':id/addresses')

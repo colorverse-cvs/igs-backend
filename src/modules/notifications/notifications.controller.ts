@@ -1,5 +1,5 @@
 import { Controller, Post, Get, Patch, Param, Req, Body, } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiParam, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { NotificationsService } from './notifications.service';
 import { Request } from 'express';
 import { CreateNotificationDto } from './dto/create-notification.dto';
@@ -14,7 +14,7 @@ export class NotificationsController {
     @ApiResponse({ status: 201, description: 'Notification created successfully' })
     @ApiResponse({ status: 404, description: 'User not found' })
     createNotification(@Req() req: Request, @Body() dto: CreateNotificationDto) {
-        const userId = (req.user as any).id;
+        const userId = (req.user as any)._id;
         return this.notificationsService.createInAppNotification(userId, dto.message);
     }
 
@@ -22,7 +22,7 @@ export class NotificationsController {
     @ApiOperation({ summary: 'Get all notifications for the current user' })
     @ApiResponse({ status: 200, description: 'List of user notifications' })
     getNotifications(@Req() req: Request) {
-        const userId = (req.user as any).id;
+        const userId = (req.user as any)._id;
         return this.notificationsService.getNotifications(userId);
     }
 

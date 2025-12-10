@@ -1,10 +1,11 @@
 import { Controller, Get, Post, Body, Param, Patch, Delete, Req, UseGuards, BadRequestException } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto, UpdateOrderStatusDto } from './dto';
 import { Order } from './schemas/order.entity';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/role.enum';
+import { JwtAuthGuard } from 'src/common/guards/auth.guard';
 // import { JwtAuthGuard } from 'src/common/guards/auth.guard';
 
 @ApiTags('Orders')
@@ -39,8 +40,10 @@ export class OrdersController {
     return this.ordersService.findOrderById(id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch(':id/status')
   @Roles(Role.Admin)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Update order status' })
   @ApiParam({ name: 'id', type: String, description: 'Order ID (UUID or ObjectId)' })
   @ApiBody({ type: UpdateOrderStatusDto })
@@ -52,8 +55,10 @@ export class OrdersController {
     return order;
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   @Roles(Role.Admin)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete an order' })
   @ApiParam({ name: 'id', type: String, description: 'Order ID (UUID or ObjectId)' })
   @ApiResponse({ status: 200, description: 'Order deleted successfully' })
@@ -62,8 +67,9 @@ export class OrdersController {
     return this.ordersService.removeOrder(id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('my')
-  // @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get orders of the logged-in user' })
   @ApiResponse({ status: 200, description: 'List of user orders', type: [Order] })
   async getMyOrders(@Req() req: any) {

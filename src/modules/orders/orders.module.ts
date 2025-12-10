@@ -7,9 +7,11 @@ import { OrderItem, OrderItemSchema } from './schemas/order-item.entity';
 // ensure these modules export the services your OrdersService depends on
 import { UsersModule } from '../users/users.module';
 import { ProductsModule } from '../products/products.module';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
+    AuthModule, 
     MongooseModule.forFeature([
       { name: Order.name, schema: OrderSchema },
       { name: OrderItem.name, schema: OrderItemSchema },

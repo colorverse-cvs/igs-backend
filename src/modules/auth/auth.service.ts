@@ -46,7 +46,7 @@ export class AuthService {
     const userId = user?._id ? user?._id.toString() : user.id || user?._id;
     if (!userId) throw new BadRequestException('Invalid user object');
 
-    const accessToken = this.createAccessToken({ sub: userId, role: user.role, email: user.email });
+    const accessToken = this.createAccessToken({ sub: userId, role: user.role, email: user.email, _id: user._id.toString() });
     const refreshToken = await this.createAndStoreRefreshToken(userId);
 
     return {
@@ -70,7 +70,7 @@ export class AuthService {
     }
 
     const newUser = await this.usersService.create({ email, password, role });
-    const payload = { sub: newUser._id, email: newUser.email, role: newUser.role };
+    const payload = { sub: newUser._id, email: newUser.email, role: newUser.role, _id: newUser._id.toString() };
     const accessToken = this.createAccessToken(payload);
     const refreshToken = await this.createAndStoreRefreshToken(newUser._id);
 
@@ -122,6 +122,10 @@ export class AuthService {
 
   async refreshTokens(userId: string, refreshToken: string) {
     const tokens = await this.refreshModel.find({ user: new Types.ObjectId(userId) }).sort({ createdAt: -1 });
+    const user = await this.usersService.findOneById(userId);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
     for (const t of tokens) {
       const match = await bcrypt.compare(refreshToken, t.token);
       if (!match) continue;
@@ -137,7 +141,7 @@ export class AuthService {
       t.expiresAt = new Date(Date.now() + this.refreshTokenTTLms);
       await t.save();
 
-      const accessToken = this.createAccessToken({ sub: userId });
+      const accessToken = this.createAccessToken({ sub: userId, role: user.role, email: user.email, _id: user._id.toString() });
       return {
         accessToken,
         refreshToken: newRaw,
