@@ -44,7 +44,7 @@ export class CreateUserDto {
   @IsNotEmpty()
   role: string;
 
-  @ApiPropertyOptional({ type: [ProfileDto], required: false })
+  @ApiPropertyOptional({ type: ProfileDto, required: false })
   @IsOptional()
   profile?: ProfileDto;
 

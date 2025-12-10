@@ -41,5 +41,5 @@ export class ProfileDto {
   @IsNotEmpty()
   @IsString()
   @Matches(/^\+91[6-9]\d{9}$/, { message: 'Invalid Indian mobile number. Use E.164: +91XXXXXXXXXX' })
-  number: string;
+  mobile: string;
 }

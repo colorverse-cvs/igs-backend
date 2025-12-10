@@ -60,7 +60,7 @@ export class UsersService {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
 
-    const {profile, addresses, ...rest } = updateUserDto;
+    const { profile, addresses, ...rest } = updateUserDto;
 
     // if (password) {
     //   user.password = await bcrypt.hash(password, 10);
@@ -115,26 +115,36 @@ export class UsersService {
     return user.addresses[user.addresses.length - 1];
   }
 
-  async updateAddress(userId: string, addressId: string, dto: Partial<Address>): Promise<Address> {
-    const user = await this.userModel.findOne({ _id: userId, 'addresses._id': addressId });
+  async updateAddress( userId: string, addressId: string, dto: Partial<Address>,): Promise<Address> {
+    const user = await this.userModel.findOne({ _id: userId, 'addresses._id': addressId,});
+
     if (!user) throw new NotFoundException('User or address not found');
 
     if (dto.isDefault) {
-      (user.addresses || []).forEach((a: any) => (a.isDefault = false));
+      user.addresses.forEach((a: any) => (a.isDefault = false));
     }
 
-    const addrIndex = (user.addresses || []).findIndex((a: any) => a._id?.toString() === addressId);
-    if (addrIndex === -1) throw new NotFoundException('Address not found');
+    const index = user.addresses.findIndex(
+      (a: any) => a._id.toString() === addressId,
+    );
 
-    const addr = user.addresses[addrIndex];
-    Object.assign(addr, dto);
-    // ensure mongoose notices changes to the addresses array
-    if (typeof (user as any).markModified === 'function') {
-      (user as any).markModified('addresses');
-    }
+    if (index === -1) throw new NotFoundException('Address not found');
+
+    // This is a mongoose subdocument, so safe
+    const addressSubdoc = user.addresses[index];
+
+    // Update fields
+    delete (dto as any)._id;
+    delete (dto as any).id;
+    Object.assign(addressSubdoc, dto);
+
+    user.markModified('addresses');
     await user.save();
-    return addr as Address;
+
+    return addressSubdoc as Address;
   }
+
+
 
   async removeAddress(userId: string, addressId: string): Promise<void> {
     const user = await this.userModel.findById(userId);
