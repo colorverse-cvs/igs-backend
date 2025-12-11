@@ -42,6 +42,15 @@ export class UsersService {
     return this.userModel.findById(userId).exec();
   }
 
+  async getProfile(userId: string): Promise<User | null> {
+    return this.userModel
+      .findById(userId)
+      .select('-password')
+      .populate('addresses')
+      .populate('phones')
+      .exec();
+  }
+
   async findOneByField(filter: Record<string, any>) {
     if (!filter || typeof filter !== 'object') {
       throw new Error("Invalid filter object");

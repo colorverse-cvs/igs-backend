@@ -34,9 +34,8 @@ export class UsersController {
   async getProfile(@Req() req: Request) {
     const user = req.user as any;
     const id = user._id;
-    const userData = await this.usersService.findOneById(id);
-    delete userData.password;
-    return  this.usersService.findOneById(id);
+    const userData = await this.usersService.getProfile(id);
+    return  userData;
   }
 
   @UseGuards(JwtAuthGuard)
