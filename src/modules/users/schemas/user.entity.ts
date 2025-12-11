@@ -1,11 +1,11 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 // import { v4 as uuidv4 } from 'uuid';
 import { Address, AddressSchema } from './address.entity';
 import { ProfileDto } from '../dto';
 
 @Schema()
-class Phone {
+export class Phone {
   @Prop({ type: String, required: true })
   number: string; // E.164 preferred, e.g. +14155552671
 
@@ -49,11 +49,11 @@ export class User extends Document {
   @Prop({ type: Object, default: {} })
   profile: ProfileDto;
 
-  @Prop({ type: [AddressSchema], default: [] })
-  addresses?: Address[];
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Address' }], default: [] })
+  addresses: Address[];
 
   // Add phones array to store any number of phone entries.
-  @Prop({ type: [PhoneSchema], default: [] })
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Phone' }], default: [] })
   phones?: Phone[];
 
   @Prop()

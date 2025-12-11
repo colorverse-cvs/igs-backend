@@ -63,13 +63,12 @@ export class AuthService {
   async register(createUserDto: CreateUserDto): Promise<UserResponseDto> {
     const { email, password, role } = createUserDto;
 
-
     const existingUser = await this.usersService.findOneByEmail(email);
     if (existingUser) {
       throw new ConflictException('Email already exists');
     }
 
-    const newUser = await this.usersService.create({ email, password, role });
+    const newUser = await this.usersService.create({ ...createUserDto, password });
     const payload = { sub: newUser._id, email: newUser.email, role: newUser.role, _id: newUser._id.toString() };
     const accessToken = this.createAccessToken(payload);
     const refreshToken = await this.createAndStoreRefreshToken(newUser._id);

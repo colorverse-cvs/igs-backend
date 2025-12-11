@@ -1,20 +1,24 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { User, UserDocument } from './schemas/user.entity';
+import { Phone, PhoneDocument, User, UserDocument } from './schemas/user.entity';
 import { CreateUserDto, UpdateUserDto } from './dto';
 import * as bcrypt from 'bcrypt';
-import { Address } from './schemas/address.entity';
+import { Address, AddressDocument } from './schemas/address.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Address.name) private addressModel: Model<AddressDocument>,
+    @InjectModel(Phone.name) private phoneModel: Model<PhoneDocument>,
   ) { }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    const { email, password, role, profile, addresses, firstName, lastName, } = createUserDto;
+    const { email, password, role, profile, addresses, phones, firstName, lastName, } = createUserDto;
 
+    const savedAddresses = await this.addressModel.insertMany(addresses || []);
+    const savedPhones = await this.phoneModel.insertMany(phones || []);
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = new this.userModel({
       email,
@@ -23,7 +27,8 @@ export class UsersService {
       password: hashedPassword,
       role,
       profile,
-      addresses
+      phones: savedPhones.map(p => p._id),
+      addresses: savedAddresses.map(a => a._id),
     });
 
     return user.save();
@@ -104,68 +109,92 @@ export class UsersService {
     const user = await this.userModel.findById(userId);
     if (!user) throw new NotFoundException('User not found');
 
+    // If new address is default → unset old ones
     if (dto.isDefault) {
-      (user.addresses || []).forEach((a: any) => (a.isDefault = false));
+      await this.addressModel.updateMany(
+        { _id: { $in: user.addresses } },
+        { $set: { isDefault: false } }
+      );
     }
 
-    const addr = dto as Address;
-    user.addresses.push(addr);
+    // Create new address document
+    const newAddress = await this.addressModel.create({
+      ...dto,
+      userId, // optional if needed
+    });
+
+    // Add reference id to User
+    user.addresses.push(newAddress._id);
     await user.save();
 
-    return user.addresses[user.addresses.length - 1];
+    return newAddress;
   }
 
-  async updateAddress( userId: string, addressId: string, dto: Partial<Address>,): Promise<Address> {
-    const user = await this.userModel.findOne({ _id: userId, 'addresses._id': addressId,});
 
-    if (!user) throw new NotFoundException('User or address not found');
+  async updateAddress(userId: string, addressId: string, dto: Partial<Address>) {
+    const user = await this.userModel.findById(userId);
+    if (!user) throw new NotFoundException('User not found');
 
-    if (dto.isDefault) {
-      user.addresses.forEach((a: any) => (a.isDefault = false));
+    // Check if this address belongs to this user
+    if (!user.addresses.includes(addressId as any)) {
+      throw new NotFoundException('Address not found for this user');
     }
 
-    const index = user.addresses.findIndex(
-      (a: any) => a._id.toString() === addressId,
+    if (dto.isDefault) {
+      // unset previous default
+      await this.addressModel.updateMany(
+        { _id: { $in: user.addresses } },
+        { $set: { isDefault: false } }
+      );
+    }
+
+    // Update actual address document
+    const updated = await this.addressModel.findByIdAndUpdate(
+      addressId,
+      dto,
+      { new: true }
     );
 
-    if (index === -1) throw new NotFoundException('Address not found');
+    if (!updated) throw new NotFoundException('Address not found');
 
-    // This is a mongoose subdocument, so safe
-    const addressSubdoc = user.addresses[index];
-
-    // Update fields
-    delete (dto as any)._id;
-    delete (dto as any).id;
-    Object.assign(addressSubdoc, dto);
-
-    user.markModified('addresses');
-    await user.save();
-
-    return addressSubdoc as Address;
+    return updated;
   }
-
 
 
   async removeAddress(userId: string, addressId: string): Promise<void> {
     const user = await this.userModel.findById(userId);
     if (!user) throw new NotFoundException('User not found');
-    const addrIndex = (user.addresses as any[]).findIndex((addr: any) => addr._id?.toString() === addressId);
-    if (addrIndex === -1) throw new NotFoundException('Address not found');
-    user.addresses.splice(addrIndex, 1);
+
+    if (!user.addresses.includes(addressId as any)) {
+      throw new NotFoundException('Address not found for this user');
+    }
+
+    // Remove ObjectId reference from user
+    user.addresses = user.addresses.filter(id => id.toString() !== addressId);
     await user.save();
+
+    // Remove actual Address document
+    await this.addressModel.findByIdAndDelete(addressId);
   }
+
 
   async getAddresses(userId: string): Promise<Address[]> {
-    const user = await this.userModel.findById(userId).lean();
+    const user = await this.userModel.findById(userId).populate('addresses');
     if (!user) throw new NotFoundException('User not found');
-    return user.addresses || [];
+
+    return user.addresses as any;
   }
 
+
   async getDefaultAddress(userId: string): Promise<Address | null> {
-    const user = await this.userModel.findById(userId).lean();
+    const user = await this.userModel.findById(userId);
     if (!user) throw new NotFoundException('User not found');
-    const addrs: Address[] = user.addresses || [];
-    return addrs.find(a => a.isDefault) || addrs[0] || null;
+
+    return await this.addressModel.findOne({
+      _id: { $in: user.addresses },
+      isDefault: true
+    }) || await this.addressModel.findOne({ _id: { $in: user.addresses } });
   }
+
 }
 
