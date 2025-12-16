@@ -43,11 +43,12 @@ export class UsersService {
   }
 
   async getProfile(userId: string): Promise<User | null> {
+    debugger
     return this.userModel
       .findById(userId)
       .select('-password')
-      .populate('addresses')
-      .populate('phones')
+      .populate({ path: 'addresses', model: 'Address' })
+      .populate({ path: 'phones', model: 'Phone' })
       .exec();
   }
 
@@ -188,9 +189,9 @@ export class UsersService {
 
 
   async getAddresses(userId: string): Promise<Address[]> {
-    const user = await this.userModel.findById(userId).populate('addresses');
+    const user = await this.userModel.findById(userId).populate({ path: 'addresses', model: 'Address' });
     if (!user) throw new NotFoundException('User not found');
-
+    debugger
     return user.addresses as any;
   }
 
