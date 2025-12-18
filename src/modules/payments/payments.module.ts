@@ -10,12 +10,14 @@ import { PaymentFactoryService } from './factories/payment-factory.service';
 import { CodPaymentStrategy } from './strategies/cod-payment.strategy';
 import { RazorpayPaymentStrategy } from './strategies/razorpay-payment.strategy';
 import { Order, OrderSchema } from '../orders/schemas/order.entity';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
     ConfigModule,
     UsersModule,
     OrdersModule,
+    AuthModule, 
     MongooseModule.forFeature([
       { name: Payment.name, schema: PaymentSchema },
       { name: Order.name, schema: OrderSchema },

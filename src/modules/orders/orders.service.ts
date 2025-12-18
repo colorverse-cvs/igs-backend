@@ -8,6 +8,7 @@ import { InjectConnection } from '@nestjs/mongoose';
 import { UsersService } from '../users/users.service';
 import { ProductsService } from '../products/products.service';
 import { OrderItem } from './schemas/order-item.entity';
+import { ORDER_STATUS_CHANGED } from 'src/common/events';
 
 @Injectable()
 export class OrdersService {
@@ -71,8 +72,13 @@ export class OrdersService {
   async findAllOrders(): Promise<Order[]> {
     return this.orderModel
       .find()
-      .populate('user')
-      .populate({ path: 'items', populate: { path: 'product' } })
+      .populate({ path: 'user', model: 'User' })
+      .populate({
+        path: 'items',
+        model: 'OrderItem',
+        populate: { path: 'product', model: 'Product' },
+      })
+      .sort({ createdAt: -1 })
       .exec();
   }
 
@@ -81,8 +87,13 @@ export class OrdersService {
 
     const order = await this.orderModel
       .findById(id)
-      .populate('user')
-      .populate({ path: 'items', populate: { path: 'product' } })
+      .populate({ path: 'user', model: 'User' })
+      .populate({
+        path: 'items',
+        model: 'OrderItem',
+        populate: { path: 'product', model: 'Product' },
+      })
+      .sort({ createdAt: -1 })
       .exec();
 
     if (!order) throw new NotFoundException('Order not found');
@@ -120,7 +131,7 @@ export class OrdersService {
 
       // domain side-effects: e.g. create shipment when placed, decrement stock when placed/paid etc.
       // emit event for other modules to handle asynchronously
-      this.eventEmitter.emit('order.status.changed', { orderId: order._id.toString(), from: current, to: newStatus, actor, reason });
+      this.eventEmitter.emit(ORDER_STATUS_CHANGED, { orderId: order._id.toString(), from: current, to: newStatus, actor, reason });
 
       await session.commitTransaction();
       session.endSession();
@@ -221,10 +232,11 @@ export class OrdersService {
   async findUserOrders(userId: string): Promise<Order[]> {
     const order = await this.orderModel
       .find({ user: userId })
-      .populate('user')
+      .populate({ path: 'user', model: 'User' })
       .populate({
         path: 'items',
-        populate: { path: 'product' }
+        model: 'OrderItem',
+        populate: { path: 'product', model: 'Product' },
       })
       .sort({ createdAt: -1 })
       .exec();

@@ -6,9 +6,9 @@ import { Payment, PaymentMethod, PaymentStatus } from './schemas/payment.entity'
 import { PaymentFactoryService } from './factories/payment-factory.service';
 import { RazorpayVerifyDto } from './dto/razorpay-verify.dto';
 import { ConfigService } from '@nestjs/config';
-import * as crypto from 'crypto';
 import { OrdersService } from '../orders/orders.service';
-// import { CartService } from '../cart/cart.service';
+import { CLEAR_CART, PAYMENT_SUCCEEDED } from 'src/common/events';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class PaymentsService {
@@ -18,7 +18,7 @@ export class PaymentsService {
         private readonly configService: ConfigService,
         private readonly paymentFactory: PaymentFactoryService,
         private readonly ordersService: OrdersService,
-        // private readonly cartService: CartService,
+        private readonly eventEmitter: EventEmitter2
     ) { }
 
     async createPayment(orderId: string, paymentMethod: PaymentMethod): Promise<Payment> {
@@ -41,6 +41,13 @@ export class PaymentsService {
         return await paymentStrategy.processPayment(paymentId);
     }
 
+    async getTransactions(page: number, limit: number): Promise<{ payments: Payment[]; total: number; pages: number }> {
+        const payments = await this.paymentModel.find().sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).exec();
+        const total = await this.paymentModel.countDocuments().exec();
+        const pages = Math.ceil(total / limit);
+        return { payments, total, pages };
+    }
+
     async handleWebhook(paymentMethod: PaymentMethod, payload: any): Promise<void> {
         const paymentStrategy = this.paymentFactory.getStrategy(paymentMethod);
         if (paymentStrategy.handleWebhook) {
@@ -51,21 +58,16 @@ export class PaymentsService {
     async verifyPayment(body: RazorpayVerifyDto, userId: string) {
         const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = body;
         const secret = this.configService.get<string>('app.razorpay.keySecret');
-
+        const paymentStrategy = this.paymentFactory.getStrategy('razorpay' as any);
         if (!secret) {
             throw new InternalServerErrorException('Razorpay webhook secret is missing in configuration',);
         }
-        // 1️⃣ Generate signature
-        const generatedSignature = crypto
-            .createHmac('sha256', secret)
-            .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-            .digest('hex');
-
-        // 2️⃣ Validate signature
-        if (generatedSignature !== razorpay_signature) {
+        const payload = `${razorpay_order_id}|${razorpay_payment_id}`;
+        const isVerified = await (paymentStrategy as any).verifySignature(payload, razorpay_signature);
+        if (!isVerified) {
             throw new BadRequestException('Payment verification failed');
         }
-        // 3️⃣ Update payment record
+        const details = await (paymentStrategy as any).captureAndGetMethod(razorpay_payment_id);
         const payment = await this.paymentModel.findOneAndUpdate(
             { paymentIntentId: razorpay_order_id },
             {
@@ -73,6 +75,7 @@ export class PaymentsService {
                 paymentDetails: {
                     razorpayPaymentId: razorpay_payment_id,
                     verifiedAt: new Date(),
+                    ...details
                 },
             },
             { new: true },
@@ -80,16 +83,17 @@ export class PaymentsService {
         if (!payment) {
             throw new BadRequestException('Payment record not found');
         }
-        // 4️⃣ Mark Order as Placed
         const order = await this.ordersService.findOrderByRazorpayOrderId(razorpay_order_id);
         if (order) {
             await this.ordersService.markAsPlaced(order._id.toString());
-            //await this.cartService.clearCart(userId);
+            this.eventEmitter.emit(CLEAR_CART, {
+                userId: order.user.toString(),
+                sessionId: order.sessionId,
+            });
         }
 
         return {
-            message: 'Payment verified successfully',
-            payment,
+            message: 'Payment verified successfully'
         };
     }
 

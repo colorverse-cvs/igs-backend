@@ -1,15 +1,11 @@
-import {
-  Injectable,
-  Logger,
-  BadRequestException,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, InternalServerErrorException,} from '@nestjs/common';
 import { IPaymentStrategy } from './payment-strategy.interface';
 import { Order } from '../../orders/schemas/order.entity';
 import { Payment, PaymentMethod, PaymentStatus } from '../schemas/payment.entity';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { validateWebhookSignature } from 'razorpay/dist/utils/razorpay-utils';
 
 const Razorpay = require('razorpay');
 
@@ -54,8 +50,8 @@ export class RazorpayPaymentStrategy implements IPaymentStrategy {
 
       // Create Local Payment Record
       const payment = await this.paymentModel.create({
-        order: order._id, 
-        paymentIntentId: rzOrder.id, 
+        order: order._id,
+        paymentIntentId: rzOrder.id,
         amount: order.total,
         currency: order.currency ?? 'INR',
         status: PaymentStatus.PENDING,
@@ -160,17 +156,29 @@ export class RazorpayPaymentStrategy implements IPaymentStrategy {
     }
   }
 
-  /**
-   * Verify Razorpay Webhook Signature
-   */
-  async verifySignature(payload: string, signature: string, secret: string,): Promise<boolean> {
-    const crypto = await import('crypto');
+  async verifySignature(payload: string, signature: string, secret?: string,): Promise<boolean> {
+    // const crypto = await import('crypto');
 
-    const expected = crypto
-      .createHmac('sha256', secret)
-      .update(payload)
-      .digest('hex');
+    // const expected = crypto
+    //   .createHmac('sha256', secret)
+    //   .update(payload)
+    //   .digest('hex');
 
-    return expected === signature;
+    // return expected === signature;
+    secret = this.configService.get<string>('app.razorpay.keySecret');
+    const isVerified = validateWebhookSignature(payload, signature, secret);
+    return isVerified;
   }
+
+  async captureAndGetMethod(paymentId: string) {
+    const payment = await this.client.payments.fetch(paymentId);
+    return {
+      transactionId: payment.id,
+      method: payment.method,
+      vpa: payment.vpa,
+      bank: payment.bank,
+      cardLast4: payment.card?.last4
+    };
+  }
+
 }

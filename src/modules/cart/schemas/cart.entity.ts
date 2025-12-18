@@ -12,9 +12,6 @@ export class Cart extends Document {
     @Prop({ type: Types.ObjectId, ref: 'User', required: false , index: true})
     user?: User | Types.ObjectId;
 
-    // @Prop({ type: [{ type: Types.ObjectId, ref: 'CartItem' }], default: [] })
-    // items: CartItem[] | Types.ObjectId[];
-
     @Prop({ type: String, required: false, index: true })
     sessionId?: string; 
 

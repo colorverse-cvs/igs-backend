@@ -9,9 +9,9 @@ export class OrderItem extends Document {
   // @Prop({ type: String, default: uuidv4, unique: true })
   // id: string;
 
-  // make order optional because items are created before attaching to an order
-  @Prop({ type: Types.ObjectId, ref: 'Order', required: false, index: true })
-  order?: Order | Types.ObjectId;
+  // // make order optional because items are created before attaching to an order
+  // @Prop({ type: Types.ObjectId, ref: 'Order', required: false, index: true })
+  // order?: Order | Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'Product', required: true })
   product: Product | Types.ObjectId;

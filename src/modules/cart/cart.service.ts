@@ -9,6 +9,8 @@ import { PaymentFactoryService } from '../payments/factories/payment-factory.ser
 import { PaymentMethod } from '../payments/schemas/payment.entity';
 import { OrdersService } from '../orders/orders.service'; // optional order persistence
 import { CheckoutDto } from './dto/checkout.dto';
+import { OnEvent } from '@nestjs/event-emitter';
+import { CLEAR_CART } from 'src/common/events';
 
 
 @Injectable()
@@ -99,7 +101,8 @@ export class CartService {
     return cart.populate('items.product');
   }
 
-  async clearCart(userId: string | undefined, sessionId?: string | undefined): Promise<void> {
+  @OnEvent(CLEAR_CART)
+  async clearCart({userId, sessionId}: {userId: string | undefined, sessionId?: string | undefined}): Promise<void> {
     const cart = await this.findOrCreateCart(userId, sessionId);
     cart.items = [] as any;
     await cart.save();
@@ -158,7 +161,7 @@ export class CartService {
 
     if (payload.paymentMethod === 'cod') {
       await this.ordersService.markAsPlaced(orderRecord._id);
-      await this.clearCart(userId, sessionId);
+      await this.clearCart({ userId, sessionId });
       return { message: 'Order placed with Cash on Delivery', orderRecord };
     }
 

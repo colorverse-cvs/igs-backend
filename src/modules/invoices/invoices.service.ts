@@ -26,20 +26,20 @@ export class InvoicesService {
         }
 
         // Prepare invoice data
-        const invoiceData = {
-            orderId: order._id.toString(),
-            customer: {
-                name: order.user?.firstName + ' ' + order.user?.lastName || 'Unknown Customer',
-                email: order.user?.email || 'N/A',
-            },
-            items: order.items.map((item: any) => ({
-                name: item.product?.name || 'Unnamed Product',
-                quantity: item.quantity,
-                price: item.price,
-            })),
-            total: order.total,
-            date: order.createdAt,
-        };
+        // const invoiceData = {
+        //     orderId: order._id.toString(),
+        //     customer: {
+        //         name: order.user?.firstName + ' ' + order.user?.lastName || 'Unknown Customer',
+        //         email: order.user?.email || 'N/A',
+        //     },
+        //     items: order.items.map((item: any) => ({
+        //         name: item.product?.name || 'Unnamed Product',
+        //         quantity: item.quantity,
+        //         price: item.price,
+        //     })),
+        //     total: order.total,
+        //     date: order.createdAt,
+        // };
 
         // Generate and save invoice PDF
         const invoicePath = `invoices/invoice_${order._id}.pdf`;

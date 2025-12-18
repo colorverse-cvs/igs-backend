@@ -65,7 +65,7 @@ export class CartController {
   async clearCart(@Req() req: Request, @Res() res: Response) {
     const userId = (req.user as any)?._id;
     const sessionId = userId ? undefined : this.ensureSessionId(req, res);
-    await this.cartService.clearCart(userId, sessionId);
+    await this.cartService.clearCart({ userId, sessionId });
     return res.json({ message: 'Cart cleared' });
   }
 

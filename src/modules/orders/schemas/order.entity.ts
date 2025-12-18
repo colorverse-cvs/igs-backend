@@ -10,7 +10,7 @@ export class Order extends Document {
 
   // user optional to support guest orders
   @Prop({ type: Types.ObjectId, ref: 'User', required: false, index: true })
-  user?: User;
+  user: User | Types.ObjectId;
 
   // order lifecycle: pending -> placed -> shipped -> delivered
   @Prop({

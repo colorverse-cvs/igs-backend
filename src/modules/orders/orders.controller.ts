@@ -13,14 +13,14 @@ import { JwtAuthGuard } from 'src/common/guards/auth.guard';
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) { }
 
-  @Post()
-  @ApiOperation({ summary: 'Create a new order' })
-  @ApiBody({ type: CreateOrderDto })
-  @ApiResponse({ status: 201, description: 'Order created successfully', type: Order })
-  @ApiResponse({ status: 404, description: 'User or product not found' })
-  createOrder(@Body() createOrderDto: CreateOrderDto) {
-    return this.ordersService.createOrder(createOrderDto);
-  }
+  // @Post()
+  // @ApiOperation({ summary: 'Create a new order' })
+  // @ApiBody({ type: CreateOrderDto })
+  // @ApiResponse({ status: 201, description: 'Order created successfully', type: Order })
+  // @ApiResponse({ status: 404, description: 'User or product not found' })
+  // createOrder(@Body() createOrderDto: CreateOrderDto) {
+  //   return this.ordersService.createOrder(createOrderDto);
+  // }
 
   @Get()
   @Roles(Role.Admin)
@@ -55,17 +55,17 @@ export class OrdersController {
     return order;
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Delete(':id')
-  @Roles(Role.Admin)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Delete an order' })
-  @ApiParam({ name: 'id', type: String, description: 'Order ID (UUID or ObjectId)' })
-  @ApiResponse({ status: 200, description: 'Order deleted successfully' })
-  @ApiResponse({ status: 404, description: 'Order not found' })
-  removeOrder(@Param('id') id: string) {
-    return this.ordersService.removeOrder(id);
-  }
+  // @UseGuards(JwtAuthGuard)
+  // @Delete(':id')
+  // @Roles(Role.Admin)
+  // @ApiBearerAuth()
+  // @ApiOperation({ summary: 'Delete an order' })
+  // @ApiParam({ name: 'id', type: String, description: 'Order ID (UUID or ObjectId)' })
+  // @ApiResponse({ status: 200, description: 'Order deleted successfully' })
+  // @ApiResponse({ status: 404, description: 'Order not found' })
+  // removeOrder(@Param('id') id: string) {
+  //   return this.ordersService.removeOrder(id);
+  // }
 
   @UseGuards(JwtAuthGuard)
   @Get('my')
