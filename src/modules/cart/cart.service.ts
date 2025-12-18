@@ -99,7 +99,7 @@ export class CartService {
     return cart.populate('items.product');
   }
 
-  async clearCart(userId: string | undefined, sessionId: string | undefined): Promise<void> {
+  async clearCart(userId: string | undefined, sessionId?: string | undefined): Promise<void> {
     const cart = await this.findOrCreateCart(userId, sessionId);
     cart.items = [] as any;
     await cart.save();
@@ -148,12 +148,9 @@ export class CartService {
 
     if (payload.paymentMethod === 'razorpay') {
       const strategy: any = this.paymentFactory.getStrategy(PaymentMethod.RAZORPAY);
-      const shortId = orderRecord._id.toString().slice(-6);
-      const receipt = `ORD-${shortId}-${Date.now()}`;
-      // const order = await strategy.createPayment(totalInPaise, { receipt, notes: { orderId: orderRecord._id.toString() } });
       const order = await strategy.createPayment(orderRecord);
       // store razorpay order id on orderRecord
-      await this.ordersService.updatePaymentMeta(orderRecord._id, { razorpayOrderId: order.id });
+      await this.ordersService.updatePaymentMeta(orderRecord._id, { razorpayOrderId: order.paymentIntentId });
 
       // return order + keyId for client to open Razorpay Checkout
       return { order, keyId: process.env.RAZORPAY_KEY_ID, orderRecord };

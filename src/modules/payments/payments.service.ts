@@ -7,6 +7,8 @@ import { PaymentFactoryService } from './factories/payment-factory.service';
 import { RazorpayVerifyDto } from './dto/razorpay-verify.dto';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
+import { OrdersService } from '../orders/orders.service';
+// import { CartService } from '../cart/cart.service';
 
 @Injectable()
 export class PaymentsService {
@@ -15,6 +17,8 @@ export class PaymentsService {
         @InjectModel(Payment.name) private readonly paymentModel: Model<Payment>,
         private readonly configService: ConfigService,
         private readonly paymentFactory: PaymentFactoryService,
+        private readonly ordersService: OrdersService,
+        // private readonly cartService: CartService,
     ) { }
 
     async createPayment(orderId: string, paymentMethod: PaymentMethod): Promise<Payment> {
@@ -44,14 +48,13 @@ export class PaymentsService {
         }
     }
 
-    async verifyPayment(body: RazorpayVerifyDto) {
-        const { razorpay_payment_id, razorpay_order_id, razorpay_signature, } = body;
-        const secret = this.configService.get<string>('app.razorpay.webhookSecret');
+    async verifyPayment(body: RazorpayVerifyDto, userId: string) {
+        const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = body;
+        const secret = this.configService.get<string>('app.razorpay.keySecret');
 
         if (!secret) {
             throw new InternalServerErrorException('Razorpay webhook secret is missing in configuration',);
         }
-
         // 1️⃣ Generate signature
         const generatedSignature = crypto
             .createHmac('sha256', secret)
@@ -74,10 +77,16 @@ export class PaymentsService {
             },
             { new: true },
         );
-
         if (!payment) {
             throw new BadRequestException('Payment record not found');
         }
+        // 4️⃣ Mark Order as Placed
+        const order = await this.ordersService.findOrderByRazorpayOrderId(razorpay_order_id);
+        if (order) {
+            await this.ordersService.markAsPlaced(order._id.toString());
+            //await this.cartService.clearCart(userId);
+        }
+
         return {
             message: 'Payment verified successfully',
             payment,

@@ -185,7 +185,6 @@ export class OrdersService {
     if (!Types.ObjectId.isValid(orderId)) throw new BadRequestException('Invalid order ID');
     const order = await this.orderModel.findById(orderId);
     if (!order) throw new NotFoundException('Order not found');
-
     order.paymentMeta = {
       ...((order as any).paymentMeta || {}),
       ...meta,
@@ -202,36 +201,41 @@ export class OrdersService {
     order.status = 'placed';
     order.updatedAt = new Date();
 
-    // if (Array.isArray(order.items)) {
-    //   for (const oi of (order.items as any[])) {
-    //     try {
-    //       const pid = (oi.product as any)?._id ?? oi.product;
-    //       if (pid) {
-    //         await this.productsService.decrementStock(pid.toString(), (oi.quantity || 0));
-    //       }
-    //     } catch (err) {
-    //       // ignore stock errors here; log if you have a logger
-    //     }
-    //   }
-    // }
+    if (Array.isArray(order.items)) {
+      for (const oi of (order.items as any[])) {
+        try {
+          const pid = (oi.product as any)?._id ?? oi.product;
+          if (pid) {
+            await this.productsService.decrementStock(pid.toString(), (oi.quantity || 0));
+          }
+        } catch (err) {
+          // ignore stock errors here; log if you have a logger
+          console.error('Stock decrement failed', err);
+        }
+      }
+    }
 
     return order.save();
   }
 
   async findUserOrders(userId: string): Promise<Order[]> {
     const order = await this.orderModel
-      .find({ user: userId })   
+      .find({ user: userId })
       .populate('user')
       .populate({
         path: 'items',
         populate: { path: 'product' }
       })
-      .sort({ createdAt: -1 }) 
+      .sort({ createdAt: -1 })
       .exec();
 
     if (!order) throw new NotFoundException('Order not found');
 
     return order
+  }
+
+  async findOrderByRazorpayOrderId(razorpayOrderId: string): Promise<Order | null> {
+    return this.orderModel.findOne({ 'paymentMeta.razorpayOrderId': razorpayOrderId }).exec();
   }
 
 }

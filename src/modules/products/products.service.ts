@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Product, ProductDocument } from './schemas/product.entity';
@@ -10,7 +10,7 @@ export class ProductsService {
   constructor(
     @InjectModel(Product.name) private productModel: Model<ProductDocument>,
     @InjectModel(Category.name) private categoryModel: Model<CategoryDocument>,
-  ) {}
+  ) { }
 
   async createProduct(createProductDto: CreateProductDto, files?: Express.Multer.File[]): Promise<Product> {
     const { categoryId, ...rest } = createProductDto;
@@ -157,5 +157,22 @@ export class ProductsService {
       { category: id },
       { $unset: { category: '' } },
     );
+  }
+  async decrementStock(productId: string, quantity: number): Promise<void> {
+    const product = await this.productModel.findById(productId);
+    if (!product) {
+      throw new NotFoundException(`Product ${productId} not found`);
+    }
+
+    if (product.stock < quantity) {
+      throw new BadRequestException(`Insufficient stock for product ${product.name}`);
+    }
+
+    product.stock -= quantity;
+    if (product.stock === 0) {
+      product.inStock = false;
+    }
+
+    await product.save();
   }
 }

@@ -43,7 +43,6 @@ export class UsersService {
   }
 
   async getProfile(userId: string): Promise<User | null> {
-    debugger
     return this.userModel
       .findById(userId)
       .select('-password')
@@ -191,7 +190,6 @@ export class UsersService {
   async getAddresses(userId: string): Promise<Address[]> {
     const user = await this.userModel.findById(userId).populate({ path: 'addresses', model: 'Address' });
     if (!user) throw new NotFoundException('User not found');
-    debugger
     return user.addresses as any;
   }
 

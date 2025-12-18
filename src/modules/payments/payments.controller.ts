@@ -13,7 +13,7 @@ export class PaymentsController {
         private readonly paymentsService: PaymentsService,
     ) { }
 
-    @Post(':orderId')
+    @Post(':orderId([0-9a-fA-F]{24})')
     @ApiOperation({ summary: 'Create a payment for an order (stripe / cod / paypal etc.)' })
     @ApiParam({ name: 'orderId', type: String, description: 'Order ID' })
     @ApiBody({ type: CreatePaymentDto })
@@ -55,14 +55,16 @@ export class PaymentsController {
 
     @Post('verify')
     @HttpCode(HttpStatus.OK)
-    @ApiOperation({ summary: 'Verify Razorpay order after checkout', description: 'This endpoint verifies the payment using razorpay_signature generated on checkout page.',})
+    @ApiOperation({ summary: 'Verify Razorpay order after checkout', description: 'This endpoint verifies the payment using razorpay_signature generated on checkout page.', })
     @ApiBody({ type: RazorpayVerifyDto })
-    @ApiResponse({ status: 200, description: 'Successfully verified Razorpay payment',})
-    @ApiResponse({status: 400, description: 'Signature mismatch or invalid razorpay order',})
-    async verifyRazorpayPayment(@Body() body: RazorpayVerifyDto) {
-        return this.paymentsService.verifyPayment(body);
+    @ApiResponse({ status: 200, description: 'Successfully verified Razorpay payment', })
+    @ApiResponse({ status: 400, description: 'Signature mismatch or invalid razorpay order', })
+    async verifyRazorpayPayment(@Body() body: RazorpayVerifyDto, @Req() req: Request) {
+        const user = (req as any).user;
+        const userId = user?._id;
+        return this.paymentsService.verifyPayment(body, userId);
     }
-
+    
     private normalizePaymentMethod(method: string): PaymentMethod {
         const m = method.toLowerCase();
         switch (m) {

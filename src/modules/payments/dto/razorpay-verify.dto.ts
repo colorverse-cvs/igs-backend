@@ -25,4 +25,12 @@ export class RazorpayVerifyDto {
   @IsNotEmpty()
   @IsString()
   razorpay_signature: string;
+
+  // @ApiProperty({
+  //   example: 'uuid',
+  //   description: 'user id',
+  // })
+  // @IsNotEmpty()
+  // @IsString()
+  // userId: string;
 }
