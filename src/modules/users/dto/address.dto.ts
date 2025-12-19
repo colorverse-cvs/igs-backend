@@ -11,6 +11,11 @@ export class AddressDto {
   @IsString()
   line2?: string;
 
+  @ApiPropertyOptional({ example: 'Landmark', description: 'Landmark (optional)' })
+  @IsOptional()
+  @IsString()
+  line3?: string;
+
   @ApiProperty({ example: 'Pune', description: 'City name' })
   @IsString()
   city!: string;

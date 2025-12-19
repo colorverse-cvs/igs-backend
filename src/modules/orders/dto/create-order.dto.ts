@@ -49,6 +49,11 @@ export class ShippingAddressDto {
   @IsString()
   line2?: string;
 
+  @ApiPropertyOptional({ example: 'Landmark' })
+  @IsOptional()
+  @IsString()
+  line3?: string;
+
   @ApiProperty({ example: 'Bengaluru' })
   @IsString()
   city: string;

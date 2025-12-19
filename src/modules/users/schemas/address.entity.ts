@@ -7,6 +7,7 @@ export type AddressDocument = Address & Document;
 export class Address {
     @Prop({ required: true }) line1: string;
     @Prop() line2?: string;
+    @Prop() line3?: string;
     @Prop({ required: true }) city: string;
     @Prop() state?: string;
     @Prop({ required: true }) postalCode: string;
