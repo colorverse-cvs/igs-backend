@@ -35,4 +35,17 @@ export class ReportsController {
     getAnalytics() {
         return this.reportsService.getAnalytics();
     }
+
+    @Get('customers')
+    @Roles(Role.Admin)
+    @ApiOperation({ summary: 'Get customers report with order stats (Admin only)' })
+    @ApiResponse({ status: 200, description: 'Customers analytics retrieved successfully' })
+    @ApiResponse({ status: 403, description: 'Forbidden - Admin role required' })
+    getCustomersReport(
+        @Query('page') page = 1,
+        @Query('limit') limit = 10,
+    ) {
+        return this.reportsService.getCustomersWithStats(+page, +limit);
+    }
+
 }
