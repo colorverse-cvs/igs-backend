@@ -40,8 +40,9 @@ export class RazorpayPaymentStrategy implements IPaymentStrategy {
       }
 
       // Create Razorpay Order
+      const amountInPaise = Math.round(order.total * 100);
       const rzOrder = await this.client.orders.create({
-        amount: order.total,
+        amount: amountInPaise,
         currency: order.currency ?? 'INR',
         receipt,
         notes: { orderId: order._id.toString() },
@@ -65,7 +66,7 @@ export class RazorpayPaymentStrategy implements IPaymentStrategy {
 
 
       this.logger.log(`✔ Razorpay order created: ${rzOrder.id}`);
-      return payment;
+      return { ...payment.toObject(), amount: amountInPaise };
     } catch (err) {
       this.logger.error('❌ Failed to create Razorpay order', err);
 

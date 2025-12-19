@@ -124,8 +124,9 @@ export class CartService {
     let totalInPaise = 0;
     for (const item of cart.items.toObject()) {
       const product: any = item.product;
-      const unitPaise = product?.priceInPaise ?? (typeof product?.price === 'number' ? Math.round(product.price * 100) : 0);
-      totalInPaise += unitPaise * (item.quantity || 1);
+      const unitPrice = typeof product?.price === 'number' ? product.price : 0;
+      //const unitPaise = product?.priceInPaise ?? (typeof product?.price === 'number' ? Math.round(product.price * 100) : 0);
+      totalInPaise += unitPrice * (item.quantity || 1);
     }
     if (totalInPaise <= 0) throw new BadRequestException('Cart total must be > 0');
 
@@ -154,9 +155,8 @@ export class CartService {
       const order = await strategy.createPayment(orderRecord);
       // store razorpay order id on orderRecord
       await this.ordersService.updatePaymentMeta(orderRecord._id, { razorpayOrderId: order.paymentIntentId });
-
       // return order + keyId for client to open Razorpay Checkout
-      return { order, keyId: process.env.RAZORPAY_KEY_ID, orderRecord };
+      return { order: { ...order, orderId: orderRecord._id.toString(), sessionId: sessionId }, keyId: process.env.RAZORPAY_KEY_ID };
     }
 
     if (payload.paymentMethod === 'cod') {

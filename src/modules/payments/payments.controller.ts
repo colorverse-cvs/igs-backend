@@ -70,8 +70,8 @@ export class PaymentsController {
         });
     }
 
-    // @UseGuards(JwtAuthGuard)
-    // @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
     @Post('verify')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Verify Razorpay order after checkout', description: 'This endpoint verifies the payment using razorpay_signature generated on checkout page.', })

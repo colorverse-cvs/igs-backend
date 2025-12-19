@@ -231,8 +231,8 @@ export class OrdersService {
 
   async findUserOrders(userId: string): Promise<Order[]> {
     const order = await this.orderModel
-      .find({ user: userId })
-      .populate({ path: 'user', model: 'User' })
+      .find({ user: new Types.ObjectId(userId) })
+      // .populate({ path: 'user', model: 'User' })
       .populate({
         path: 'items',
         model: 'OrderItem',
@@ -240,7 +240,6 @@ export class OrdersService {
       })
       .sort({ createdAt: -1 })
       .exec();
-
     if (!order) throw new NotFoundException('Order not found');
 
     return order

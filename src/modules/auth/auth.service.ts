@@ -23,7 +23,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
   ) {
-    this.accessTokenExpiresIn = this.config.get<string>('app.jwtAccessExpiresIn') || '15m';
+    this.accessTokenExpiresIn = this.config.get<string>('app.JWT_EXPIRES_IN') || '15m';
     // refresh token lifetime in days or value from config
     this.refreshTokenExpiresDays = parseInt(this.config.get<string>('app.refreshTokenDays') || '30', 10);
     this.refreshTokenTTLms = this.refreshTokenExpiresDays * 24 * 60 * 60 * 1000;
