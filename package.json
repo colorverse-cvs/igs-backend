@@ -15,7 +15,12 @@
     "migrate:up": "migrate-mongo up",
     "migrate:down": "migrate-mongo down",
     "migrate:status": "migrate-mongo status",
-    "migrate:run": "node ./scripts/run-migrations.js"
+    "migrate:run": "node ./scripts/run-migrations.js",
+    "pm2:start": "pm2 start ecosystem.config.js --env production",
+    "pm2:stop": "pm2 stop ecosystem.config.js",
+    "pm2:restart": "pm2 restart ecosystem.config.js",
+    "pm2:logs": "pm2 logs giftshop-api",
+    "pm2:status": "pm2 status"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.20",
