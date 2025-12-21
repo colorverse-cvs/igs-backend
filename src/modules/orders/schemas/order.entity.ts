@@ -37,13 +37,30 @@ export class Order extends Document {
   @Prop({ type: Object, default: {} })
   paymentMeta?: Record<string, any>;
 
+  // Shipping address - snapshot of the address used for this order
+  // Stored as embedded document so it persists even if user deletes/modifies their saved addresses
+  @Prop({
+    type: Object,
+    required: true,
+    _id: false // Don't create separate _id for embedded address
+  })
+  shippingAddress: {
+    line1: string;
+    line2?: string;
+    line3?: string;
+    city: string;
+    state?: string;
+    postalCode: string;
+    country: string;
+    phone?: string;
+  };
+
   // guest customer info (if user is not set)
   @Prop({ type: Object, required: false })
   customer?: {
     name?: string;
     email?: string;
     phone?: string;
-    shippingAddress?: any;
   };
 
   // optional linkage to cart/session for traceability

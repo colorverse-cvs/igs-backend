@@ -102,7 +102,7 @@ export class CartService {
   }
 
   @OnEvent(CLEAR_CART)
-  async clearCart({userId, sessionId}: {userId: string | undefined, sessionId?: string | undefined}): Promise<void> {
+  async clearCart({ userId, sessionId }: { userId: string | undefined, sessionId?: string | undefined }): Promise<void> {
     const cart = await this.findOrCreateCart(userId, sessionId);
     cart.items = [] as any;
     await cart.save();
@@ -141,11 +141,11 @@ export class CartService {
       })),
       amount: totalInPaise,
       currency: 'INR',
+      shippingAddress: payload.address, // Pass the shipping address
       customer: userId ? undefined : {
         name: payload.name,
         email: payload.email,
         phone: payload.phone,
-        shippingAddress: payload.address,
       },
       paymentMethod: payload.paymentMethod,
     });

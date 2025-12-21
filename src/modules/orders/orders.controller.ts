@@ -22,14 +22,16 @@ export class OrdersController {
   //   return this.ordersService.createOrder(createOrderDto);
   // }
 
+  @UseGuards(JwtAuthGuard)
   @Get()
   @Roles(Role.Admin)
-  @ApiOperation({ summary: 'Get all orders' })
+  @ApiOperation({ summary: 'Get all orders (Admin only)' })
   @ApiResponse({ status: 200, description: 'List of all orders', type: [Order] })
   findAllOrders() {
     return this.ordersService.findAllOrders();
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get(':id([0-9a-fA-F]{24})')
   @Roles(Role.Admin)
   @ApiOperation({ summary: 'Get a specific order by ID' })

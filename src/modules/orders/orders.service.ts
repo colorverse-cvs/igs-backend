@@ -72,7 +72,11 @@ export class OrdersService {
   async findAllOrders(): Promise<Order[]> {
     return this.orderModel
       .find()
-      .populate({ path: 'user', model: 'User' })
+      .populate({
+        path: 'user',
+        model: 'User',
+        // populate: { path: 'addresses', model: 'Address',},
+      })
       .populate({
         path: 'items',
         model: 'OrderItem',
@@ -87,7 +91,11 @@ export class OrdersService {
 
     const order = await this.orderModel
       .findById(id)
-      .populate({ path: 'user', model: 'User' })
+      .populate({
+        path: 'user',
+        model: 'User',
+        // populate: { path: 'addresses', model: 'Address',},
+      })
       .populate({
         path: 'items',
         model: 'OrderItem',
@@ -154,7 +162,12 @@ export class OrdersService {
   // New helpers for checkout flow
   // -----------------------
   async createPending(payload: any): Promise<Order> {
-    const { userId, items, amount, currency = 'INR', customer, cartId, sessionId, paymentMethod, } = payload;
+    const { userId, items, amount, currency = 'INR', customer, cartId, sessionId, paymentMethod, shippingAddress } = payload;
+
+    // Validate shipping address is provided
+    if (!shippingAddress) {
+      throw new BadRequestException('Shipping address is required');
+    }
 
     const orderItems: any[] = [];
     // If items contain productId, validate and create order item docs
@@ -178,6 +191,7 @@ export class OrdersService {
       currency,
       status: 'pending',
       paymentMethod: paymentMethod ?? 'unknown',
+      shippingAddress, // Store the shipping address snapshot
       createdAt: new Date(),
       updatedAt: new Date(),
       history: [
@@ -225,7 +239,7 @@ export class OrdersService {
       changedBy: order.user as any,
       reason: 'Payment successful',
       at: new Date(),
-    }); 
+    });
 
     if (Array.isArray(order.items)) {
       for (const oi of (order.items as any[])) {
@@ -247,7 +261,14 @@ export class OrdersService {
   async findUserOrders(userId: string): Promise<Order[]> {
     const order = await this.orderModel
       .find({ user: new Types.ObjectId(userId) })
-      // .populate({ path: 'user', model: 'User' })
+      .populate({
+        path: 'user',
+        model: 'User',
+        populate: {
+          path: 'addresses',
+          model: 'Address',
+        },
+      })
       .populate({
         path: 'items',
         model: 'OrderItem',
