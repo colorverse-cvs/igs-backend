@@ -1,6 +1,7 @@
+require('dotenv').config();
 module.exports = {
   mongodb: {
-    url: process.env.MONGO_URI || 'mongodb://admin:root@localhost:27017/giftshop?authSource=admin',
+    url: process.env.MONGO_URI || 'mongodb://localhost:27017/giftshop?authSource=admin',
     databaseName: process.env.MONGO_DB || 'giftshop',
     options: {
       useNewUrlParser: true,

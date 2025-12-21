@@ -80,4 +80,18 @@ export class OrdersController {
     return this.ordersService.findUserOrders(userId);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id/cancel')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Cancel an order (Customer/Admin)' })
+  @ApiParam({ name: 'id', description: 'Order ID' })
+  @ApiResponse({ status: 200, description: 'Order cancelled successfully', type: Order })
+  @ApiResponse({ status: 400, description: 'Order cannot be cancelled' })
+  @ApiResponse({ status: 404, description: 'Order not found' })
+  async cancelOrder(@Req() req: any,  @Param('id') id: string, @Body('reason') reason?: string,) {
+    const actor = req.user;
+    return this.ordersService.cancelOrder(id, actor, reason);
+  }
+
+
 }

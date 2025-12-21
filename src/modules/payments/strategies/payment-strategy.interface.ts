@@ -5,4 +5,6 @@ export interface IPaymentStrategy {
     createPayment(order: Order): Promise<Payment>;
     processPayment(paymentId: string): Promise<Payment>;
     handleWebhook?(payload: any): Promise<void>;
+
+    refundPayment?(payment: Payment, amount?: number): Promise<any>;
 }

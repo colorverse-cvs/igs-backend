@@ -180,6 +180,14 @@ export class OrdersService {
       paymentMethod: paymentMethod ?? 'unknown',
       createdAt: new Date(),
       updatedAt: new Date(),
+      history: [
+        {
+          status: 'pending',
+          changedBy: userId ? new Types.ObjectId(userId) : undefined,
+          reason: 'Order created',
+          at: new Date(),
+        },
+      ],
     };
 
     if (userId) orderData.user = new Types.ObjectId(userId);
@@ -211,6 +219,13 @@ export class OrdersService {
 
     order.status = 'placed';
     order.updatedAt = new Date();
+    order.history = order.history || [];
+    order.history.push({
+      status: 'placed',
+      changedBy: order.user as any,
+      reason: 'Payment successful',
+      at: new Date(),
+    }); 
 
     if (Array.isArray(order.items)) {
       for (const oi of (order.items as any[])) {
@@ -248,5 +263,48 @@ export class OrdersService {
   async findOrderByRazorpayOrderId(razorpayOrderId: string): Promise<Order | null> {
     return this.orderModel.findOne({ 'paymentMeta.razorpayOrderId': razorpayOrderId }).exec();
   }
+
+  async cancelOrder(orderId: string, actor: any, reason?: string): Promise<Order> {
+    const order = await this.orderModel.findById(orderId);
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    if (
+      actor.role !== 'admin' &&
+      order.user?.toString() !== actor._id.toString()
+    ) {
+      throw new ForbiddenException('You cannot cancel this order');
+    }
+
+    // allowed statuses
+    const cancellable = ['pending', 'placed'];
+    if (!cancellable.includes(order.status)) {
+      throw new BadRequestException(
+        `Order cannot be cancelled when status is '${order.status}'`,
+      );
+    }
+
+    order.status = 'cancelled';
+
+    order.history = order.history || [];
+    order.history.push({
+      status: 'cancelled',
+      changedBy: actor._id,
+      reason: reason || 'Cancelled by user',
+      at: new Date(),
+    });
+
+    await order.save();
+    return order;
+  }
+
+  async pushHistory(orderId: string, entry: any) {
+    await this.orderModel.findByIdAndUpdate(orderId, {
+      $push: { history: entry },
+    });
+  }
+
 
 }

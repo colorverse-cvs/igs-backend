@@ -1,4 +1,4 @@
-import { Injectable, Logger, BadRequestException, InternalServerErrorException,} from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, InternalServerErrorException, } from '@nestjs/common';
 import { IPaymentStrategy } from './payment-strategy.interface';
 import { Order } from '../../orders/schemas/order.entity';
 import { Payment, PaymentMethod, PaymentStatus } from '../schemas/payment.entity';
@@ -180,6 +180,16 @@ export class RazorpayPaymentStrategy implements IPaymentStrategy {
       bank: payment.bank,
       cardLast4: payment.card?.last4
     };
+  }
+
+  async refundPayment(payment: Payment, amount?: number) {
+    const razorpayPaymentId = payment.paymentIntentId;
+    if (!razorpayPaymentId) {
+      throw new BadRequestException('Razorpay payment id missing');
+    }
+    return this.client.payments.refund(razorpayPaymentId, {
+      amount: amount ?? payment.amount, // paise
+    });
   }
 
 }

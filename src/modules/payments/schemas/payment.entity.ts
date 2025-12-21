@@ -64,6 +64,8 @@ export class Payment {
         last4?: string;
         brand?: string;
         codReference?: string;
+        refundId?: string;
+        refundedAt?: Date;
     };
 }
 

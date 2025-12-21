@@ -97,4 +97,51 @@ export class PaymentsService {
         };
     }
 
+    async refundOrder(orderId: string) {
+        const order = await this.ordersService.findOrderById(orderId);
+        if (!order) throw new NotFoundException('Order not found');
+        if (order.status !== 'cancelled') {
+            throw new BadRequestException('Only cancelled orders can be refunded');
+        }
+
+        const payment = await this.paymentModel.findOne({
+            order: order._id,
+            status: PaymentStatus.SUCCEEDED,
+        });
+
+        if (!payment) {
+            throw new BadRequestException('No successful payment found for this order');
+        }
+
+        // ✅ pick strategy based on payment method
+        const strategy = this.paymentFactory.getStrategy(
+            payment.paymentMethod as PaymentMethod,
+        );
+
+        // 🔁 delegate refund to gateway
+        const refund = await strategy.refundPayment(payment);
+
+        // ✅ Update payment
+        payment.status = PaymentStatus.REFUNDED;
+        payment.paymentDetails = {
+            ...payment.paymentDetails,
+            refundId: refund.id,
+            refundedAt: new Date(),
+        };
+        await payment.save();
+
+        // ✅ Update order history
+        await this.ordersService.pushHistory(order._id, {
+            status: 'refunded',
+            reason: 'Refund processed by admin',
+            at: new Date(),
+        });
+        return {
+            message: 'Refund processed successfully',
+            refund,
+        };
+    }
+
+
+
 }

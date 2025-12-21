@@ -84,6 +84,15 @@ export class PaymentsController {
         return this.paymentsService.verifyPayment(body, userId);
     }
 
+    @UseGuards(JwtAuthGuard)
+    @Post('refund/:orderId')
+    @Roles(Role.Admin)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Refund a cancelled order (Admin)' })
+    async refundOrder(@Param('orderId') orderId: string) {
+        return this.paymentsService.refundOrder(orderId);
+    }
+
     private normalizePaymentMethod(method: string): PaymentMethod {
         const m = method.toLowerCase();
         switch (m) {
