@@ -40,7 +40,7 @@ export class CartService {
           return sessionCart.populate('items.product');
         } else {
           for (const it of sessionCart.items) {
-            const found = cart.items.find(i => i.product.toString() === it.product.toString());
+            const found = cart.items.find(i => i.product?.toString() === it.product?.toString());
             if (found) found.quantity += it.quantity;
             else cart.items.push(it);
           }
@@ -68,7 +68,7 @@ export class CartService {
     const cart = await this.findOrCreateCart(userId, sessionId);
     const product = await this.productsService.findProductById(productId);
     if (!product) throw new NotFoundException('Product not found');
-    const existingItem = cart.items.find(item => (item.product as any).toString() === productId);
+    const existingItem = cart.items.find(item => (item.product as any)?.toString() === productId);
     if (existingItem) {
       existingItem.quantity += quantity;
     } else {
