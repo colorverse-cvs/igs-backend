@@ -1,11 +1,11 @@
 const { ObjectId } = require('mongodb');
 
 const SEED_CATEGORIES = [
-  { _id: new ObjectId("66fbf6f90123456789abc001"), name: "Soft Toys" },
-  { _id: new ObjectId("66fbf6f90123456789abc002"), name: "Home Decor" },
-  { _id: new ObjectId("66fbf6f90123456789abc003"), name: "Cards" },
-  { _id: new ObjectId("66fbf6f90123456789abc004"), name: "Personalized" },
-  { _id: new ObjectId("66fbf6f90123456789abc005"), name: "Hampers" },
+  { _id: new ObjectId("66fbf6f90123456789abc001"), name: "Chhatrapati Shivaji Maharaj Statues" },
+  { _id: new ObjectId("66fbf6f90123456789abc002"), name: "Mavale Statues" },
+  { _id: new ObjectId("66fbf6f90123456789abc003"), name: "God Statues" },
+  { _id: new ObjectId("66fbf6f90123456789abc004"), name: "Home Decor" },
+  { _id: new ObjectId("66fbf6f90123456789abc005"), name: "Motivational Statues" },
 ];
 
 module.exports = {

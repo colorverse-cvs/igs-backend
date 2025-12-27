@@ -17,14 +17,16 @@ async function bootstrap() {
   const port = cfg.get<number>('app.PORT') || 3000;
 
   // CORS configuration
-  // Set env var `app.CORS_ORIGINS` (comma-separated) to restrict origins, or leave unset/`*` to allow all.
-  const corsEnv = cfg.get<string>('app.CORS_ORIGINS') || '*';
-  const corsOptions =
-    corsEnv === '*' || !corsEnv
-      ? { origin: true, credentials: true } // allow any origin (origin: true is recommended when credentials: true)
-      : { origin: corsEnv.split(',').map((s) => s.trim()), credentials: true };
+  const corsEnv = cfg.get<string>('app.CORS_ORIGINS') || 'https://ishitagallery.com,https://www.ishitagallery.com';
 
-  app.enableCors(corsOptions);
+  app.enableCors({
+    origin: corsEnv.split(',').map((s) => s.trim()),
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    maxAge: 86400,
+  });
+
 
   app.use(cookieParser());
 
