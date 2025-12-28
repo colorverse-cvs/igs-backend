@@ -111,10 +111,10 @@ export class OrdersService {
   async updateOrderStatus(orderId: string, newStatus: OrderStatus, reason: string | undefined, actor: any) {
     if (!ORDER_STATUSES.includes(newStatus)) throw new BadRequestException('Invalid status');
 
-    const session = await this.connection.startSession();
-    session.startTransaction();
+    //const session = await this.connection.startSession();
+    //session.startTransaction();
     try {
-      const order = await this.orderModel.findById(orderId).session(session);
+      const order = await this.orderModel.findById(orderId);//.session(session);
       if (!order) throw new NotFoundException('Order not found');
 
       const current = order.status as OrderStatus;
@@ -125,7 +125,7 @@ export class OrdersService {
 
       // optional: role-based check
       const actorRole = actor?.role;
-      if (newStatus === 'shipped' && actorRole !== 'admin' && actorRole !== 'logistics') {
+      if (newStatus === 'shipped' && actorRole !== 'admin') {
         throw new ForbiddenException('Not permitted to mark shipped');
       }
 
@@ -135,19 +135,19 @@ export class OrdersService {
       order.history = order.history || [];
       order.history.push({ status: newStatus, changedBy: actor?.id ? new Types.ObjectId(actor.id) : undefined, reason, at: new Date() });
 
-      await order.save({ session });
-
+      // await order.save({ session });
+      await order.save();
       // domain side-effects: e.g. create shipment when placed, decrement stock when placed/paid etc.
       // emit event for other modules to handle asynchronously
       this.eventEmitter.emit(ORDER_STATUS_CHANGED, { orderId: order._id.toString(), from: current, to: newStatus, actor, reason });
 
-      await session.commitTransaction();
-      session.endSession();
+      // await session.commitTransaction();
+      // session.endSession();
 
       return order;
     } catch (err) {
-      await session.abortTransaction();
-      session.endSession();
+      //await session.abortTransaction();
+      //session.endSession();
       throw err;
     }
   }

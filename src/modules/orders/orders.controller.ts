@@ -46,7 +46,7 @@ export class OrdersController {
   @Patch(':id/status')
   @Roles(Role.Admin)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Update order status' })
+  @ApiOperation({ summary: 'Update order status (Admin only)' })
   @ApiParam({ name: 'id', type: String, description: 'Order ID (UUID or ObjectId)' })
   @ApiBody({ type: UpdateOrderStatusDto })
   @ApiResponse({ status: 200, description: 'Order status updated successfully', type: Order })
@@ -90,7 +90,7 @@ export class OrdersController {
   @ApiResponse({ status: 200, description: 'Order cancelled successfully', type: Order })
   @ApiResponse({ status: 400, description: 'Order cannot be cancelled' })
   @ApiResponse({ status: 404, description: 'Order not found' })
-  async cancelOrder(@Req() req: any,  @Param('id') id: string, @Body('reason') reason?: string,) {
+  async cancelOrder(@Req() req: any, @Param('id') id: string, @Body('reason') reason?: string,) {
     const actor = req.user;
     return this.ordersService.cancelOrder(id, actor, reason);
   }
