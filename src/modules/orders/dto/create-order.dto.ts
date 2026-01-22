@@ -112,11 +112,11 @@ export class CreateOrderDto {
   @IsEnum(PaymentMethodDto)
   paymentMethod?: PaymentMethodDto;
 
-  @ApiPropertyOptional({ type: ShippingAddressDto, description: 'Shipping address (required for guest checkout)' })
-  @IsOptional()
+  @ApiProperty({ type: ShippingAddressDto, description: 'Shipping address' })
+  @IsNotEmpty()
   @ValidateNested()
   @Type(() => ShippingAddressDto)
-  shippingAddress?: ShippingAddressDto;
+  shippingAddress: ShippingAddressDto;
 
   @ApiPropertyOptional({ example: 'Jane Doe' })
   @IsOptional()

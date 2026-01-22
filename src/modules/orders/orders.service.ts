@@ -22,7 +22,7 @@ export class OrdersService {
   ) { }
 
   async createOrder(createOrderDto: any): Promise<Order> {
-    const { userId, items } = createOrderDto;
+    const { userId, items, shippingAddress } = createOrderDto;
 
     const user = await this.usersService.findOneById(userId);
     if (!user) throw new NotFoundException('User not found');
@@ -52,6 +52,7 @@ export class OrdersService {
       user: user?._id,
       status: 'placed',
       total,
+      shippingAddress,
       items: orderItems.map((item) => item._id),
     });
 
@@ -162,7 +163,8 @@ export class OrdersService {
   // New helpers for checkout flow
   // -----------------------
   async createPending(payload: any): Promise<Order> {
-    const { userId, items, amount, currency = 'INR', customer, cartId, sessionId, paymentMethod, shippingAddress } = payload;
+    const { userId, items, amount, currency = 'INR', customer, cartId, sessionId, paymentMethod, shippingAddress: rootAddress } = payload;
+    const shippingAddress = rootAddress || customer?.shippingAddress;
 
     // Validate shipping address is provided
     if (!shippingAddress) {
