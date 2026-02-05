@@ -8,6 +8,7 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
 import { join } from 'path';
 import * as express from 'express';
 import * as cookieParser from 'cookie-parser';
+import * as compression from 'compression';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -27,7 +28,11 @@ async function bootstrap() {
     maxAge: 86400,
   });
 
-
+  app.use(compression());
+  
+  app.use(express.json({ limit: '50mb' }));
+  app.use(express.urlencoded({ limit: '50mb', extended: true }));
+  
   app.use(cookieParser());
 
   // ✅ Set global prefix for all APIs
