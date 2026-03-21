@@ -4,6 +4,8 @@ import { Model } from 'mongoose';
 import { Product, ProductDocument } from './schemas/product.entity';
 import { Category, CategoryDocument } from './schemas/category.entity';
 import { CreateProductDto, UpdateProductDto, CreateCategoryDto, UpdateCategoryDto } from './dto';
+import { promises as fs } from 'fs';
+import { join } from 'path';
 
 @Injectable()
 export class ProductsService {
@@ -21,10 +23,7 @@ export class ProductsService {
       url: `/public/products/${file.filename}`,
       isPrimary: index === 0,
       position: index,
-      meta: {
-        originalName: file.originalname,
-        mimeType: file.mimetype,
-      },
+      meta: new Map([['originalName', file.originalname], ['mimeType', file.mimetype]]),
     }));
 
     if (!images || images.length === 0) {
@@ -32,10 +31,7 @@ export class ProductsService {
         url: `/public/products/product_placeholder.jpg`,
         isPrimary: true,
         position: 0,
-        meta: {
-          originalName: 'product_placeholder.jpg',
-          mimeType: 'image/jpeg',
-        },
+        meta: new Map([['originalName', 'product_placeholder.jpg'], ['mimeType', 'image/jpeg']]),
       }];
     }
     const product = new this.productModel({ ...rest, category: category._id, images, });
@@ -60,24 +56,57 @@ export class ProductsService {
   }
 
   async updateProduct(id: string, updateProductDto: UpdateProductDto, files?: Express.Multer.File[]): Promise<Product> {
-    const { categoryId, ...rest } = updateProductDto;
+    const { categoryId, removedImages = [], ...rest } = updateProductDto;
     const product = await this.findProductById(id);
-    let images: { url: string; isPrimary: boolean; position: number; meta: { originalName: string; mimeType: string; }; }[] | undefined;
-    if (files?.length) {
-      images = files.map((file, index) => ({
-        url: `/public/products/${file.filename}`,
-        isPrimary: index === 0,
-        position: index,
-        meta: {
-          originalName: file.originalname,
-          mimeType: file.mimetype,
-        },
-      }));
 
-      updateProductDto = { ...updateProductDto, images: files };
+    // remove requested old images
+    if (removedImages.length > 0 && Array.isArray(product.images)) {
+      const toDelete = product.images.filter(img => removedImages.includes(img.url));
+      product.images = product.images.filter(img => !removedImages.includes(img.url));
+
+      for (const img of toDelete) {
+        if (img.url) {
+          const fname = img.url.split('/').pop();
+          if (fname && fname !== 'product_placeholder.jpg') {
+            const p = join(process.cwd(), 'uploads', 'products', fname);
+            await fs.unlink(p).catch(() => null);
+          }
+        }
+      }
     }
+
+    // new files appended
+    if (files?.length) {
+      const newImages = files.map((file, idx) => ({
+        url: `/public/products/${file.filename}`,
+        isPrimary: idx === 0,
+        position: (product.images?.length ?? 0) + idx,
+        meta: new Map([['originalName', file.originalname], ['mimeType', file.mimetype]]),
+      }));
+      product.images = [...(product.images || []), ...newImages];
+    }
+
+    // fallback placeholder
+    if (!product.images || product.images.length === 0) {
+      product.images = [{
+        url: `/public/products/product_placeholder.jpg`,
+        isPrimary: true,
+        position: 0,
+        meta: new Map([['originalName', 'product_placeholder.jpg'], ['mimeType', 'image/jpeg']]),
+      }];
+    }
+
+    // normalize primary
+    if (product.images.some(i => i.isPrimary)) {
+      const firstPrimary = product.images.find(i => i.isPrimary);
+      product.images = product.images.map((i) => ({ ...i, isPrimary: i === firstPrimary }));
+    } else {
+      product.images[0].isPrimary = true;
+    }
+
     if (categoryId) {
-      const category = await this.categoryModel.findById(categoryId);
+      const trimmedCategoryId = String(categoryId).trim();
+      const category = await this.categoryModel.findById(trimmedCategoryId);
       if (!category) throw new NotFoundException('Category not found');
       product.category = category.id;
     }

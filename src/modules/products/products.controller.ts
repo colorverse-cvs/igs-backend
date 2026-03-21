@@ -134,8 +134,50 @@ export class ProductsController {
   @ApiResponse({ status: 403, description: 'Forbidden - Admin role required' })
   @ApiResponse({ status: 404, description: 'Product not found.' })
   update(@Param('id') id: string, @Body() body: any, @UploadedFiles() files: Express.Multer.File[],) {
+    const parseRemovedImages = (value: any): string[] => {
+      if (!value) return [];
+      if (Array.isArray(value)) return value.map((i) => String(i).trim()).filter(Boolean);
+      if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+          try {
+            const parsed = JSON.parse(trimmed);
+            if (Array.isArray(parsed)) return parsed.map((i) => String(i).trim()).filter(Boolean);
+          } catch {
+          }
+        }
+        if (trimmed.includes(',')) {
+          return trimmed.split(',').map((i) => i.trim()).filter(Boolean);
+        }
+        return [trimmed];
+      }
+      return [];
+    };
+    const removedImages = parseRemovedImages(body.removedImages);
+
+    const safeParse = (value: any) => {
+      if (value == null) return undefined;
+      if (Array.isArray(value)) return value;
+      if (typeof value !== 'string') return value;
+      const trimmed = value.trim();
+      if (!trimmed) return undefined;
+      if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+        try {
+          return JSON.parse(trimmed);
+        } catch {
+          // fall back to raw string handling
+        }
+      }
+      if (trimmed.includes(',')) {
+        return trimmed.split(',').map((s) => s.trim()).filter(Boolean);
+      }
+      return trimmed;
+    };
+    const categoryId = body.categoryId ? String(body.categoryId).trim() : undefined;
     const updateProductDto: UpdateProductDto = {
       ...body,
+      removedImages,
+      categoryId,
       price: body.price ? parseFloat(body.price) : undefined,
       listPrice: body.listPrice ? parseFloat(body.listPrice) : undefined,
       discount: body.discount ? parseFloat(body.discount) : undefined,
@@ -143,9 +185,9 @@ export class ProductsController {
       stock: body.stock ? parseInt(body.stock) : undefined,
       weight: body.weight ? parseFloat(body.weight) : undefined,
       isCustomizable: body.isCustomizable ? (body.isCustomizable === 'true' || body.isCustomizable === true) : undefined,
-      tags: body.tags ? (typeof body.tags === 'string' ? JSON.parse(body.tags) : body.tags) : undefined,
-      attributes: body.attributes ? (typeof body.attributes === 'string' ? JSON.parse(body.attributes) : body.attributes) : undefined,
-      dimensions: body.dimensions ? (typeof body.dimensions === 'string' ? JSON.parse(body.dimensions) : body.dimensions) : undefined,
+      tags: safeParse(body.tags),
+      attributes: safeParse(body.attributes),
+      dimensions: safeParse(body.dimensions),
     };
     return this.productsService.updateProduct(id, updateProductDto, files);
   }
