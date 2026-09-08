@@ -23,6 +23,13 @@ export class Banner extends Document {
    */
   @Prop({ type: [String], default: [] })
   texts: string[];
+
+  /**
+   * Array of Instagram Reel IDs for marketing display.
+   * e.g. ["CxYz1234567", "DaBC9876543"]
+   */
+  @Prop({ type: [String], default: [] })
+  instagramReelIds: string[];
 }
 
 export type BannerDocument = Banner & Document;

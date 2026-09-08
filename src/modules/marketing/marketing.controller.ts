@@ -22,6 +22,7 @@ import {
 } from '@nestjs/swagger';
 import { MarketingService } from './marketing.service';
 import { AddTextsDto } from './dto/add-texts.dto';
+import { AddInstagramReelsDto } from './dto/instagram-id.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/role.enum';
 
@@ -149,5 +150,53 @@ export class MarketingController {
   @ApiResponse({ status: 404, description: 'Index out of range' })
   deleteTextByIndex(@Param('index', ParseIntPipe) index: number) {
     return this.marketingService.deleteTextByIndex(index);
+  }
+
+  // ─── Instagram Reel ID Endpoints ─────────────────────────────────────────────
+
+  /**
+   * GET /marketing/banner/instagram-reels
+   * Retrieve all stored Instagram Reel IDs. Public.
+   */
+  @Get('instagram-reels')
+  @ApiOperation({ summary: 'Get all stored Instagram Reel IDs' })
+  @ApiResponse({ status: 200, description: 'Array of reel IDs (empty array if none set)' })
+  getInstagramReels() {
+    return this.marketingService.getInstagramReels();
+  }
+
+  /**
+   * POST /marketing/banner/instagram-reels
+   * Add one or more Instagram Reel IDs. Admin only.
+   */
+  @Post('instagram-reels')
+  @Roles(Role.Admin)
+  @ApiOperation({ summary: 'Add Instagram Reel IDs (Admin only)' })
+  @ApiBody({ type: AddInstagramReelsDto })
+  @ApiResponse({ status: 201, description: 'Reel IDs added; updated array returned' })
+  @ApiResponse({ status: 400, description: 'Validation error — reelIds must be a non-empty string array' })
+  @ApiResponse({ status: 403, description: 'Forbidden — Admin role required' })
+  addInstagramReels(@Body() dto: AddInstagramReelsDto) {
+    return this.marketingService.addInstagramReels(dto);
+  }
+
+  /**
+   * DELETE /marketing/banner/instagram-reels/:index
+   * Remove a single Reel ID by its zero-based array index. Admin only.
+   */
+  @Delete('instagram-reels/:index')
+  @Roles(Role.Admin)
+  @ApiOperation({ summary: 'Delete an Instagram Reel ID by index (Admin only)' })
+  @ApiParam({
+    name: 'index',
+    type: Number,
+    description: 'Zero-based index of the reel ID to delete',
+    example: 0,
+  })
+  @ApiResponse({ status: 200, description: 'Reel ID deleted; updated array returned' })
+  @ApiResponse({ status: 403, description: 'Forbidden — Admin role required' })
+  @ApiResponse({ status: 404, description: 'Index out of range' })
+  deleteInstagramReelByIndex(@Param('index', ParseIntPipe) index: number) {
+    return this.marketingService.deleteInstagramReelByIndex(index);
   }
 }

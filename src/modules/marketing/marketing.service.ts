@@ -7,6 +7,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Banner, BannerDocument } from './schemas/banner.entity';
 import { AddTextsDto } from './dto/add-texts.dto';
+import { AddInstagramReelsDto } from './dto/instagram-id.dto';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 
@@ -129,5 +130,46 @@ export class MarketingService {
     await banner.save();
 
     return { texts: banner.texts };
+  }
+
+  // ─── Instagram Reel IDs ─────────────────────────────────────────────────────
+
+  /**
+   * Returns all stored Instagram Reel IDs.
+   */
+  async getInstagramReels(): Promise<{ reelIds: string[] }> {
+    const banner = await this.getOrCreateBanner();
+    return { reelIds: banner.instagramReelIds };
+  }
+
+  /**
+   * Appends one or more Reel IDs to the instagramReelIds array.
+   */
+  async addInstagramReels(dto: AddInstagramReelsDto): Promise<{ reelIds: string[] }> {
+    const banner = await this.getOrCreateBanner();
+    banner.instagramReelIds.push(...dto.reelIds);
+    banner.markModified('instagramReelIds');
+    await banner.save();
+    return { reelIds: banner.instagramReelIds };
+  }
+
+  /**
+   * Deletes a single Reel ID by its zero-based array index.
+   * Throws 404 if the index is out of range.
+   */
+  async deleteInstagramReelByIndex(index: number): Promise<{ reelIds: string[] }> {
+    const banner = await this.getOrCreateBanner();
+
+    if (index < 0 || index >= banner.instagramReelIds.length) {
+      throw new NotFoundException(
+        `Reel ID at index ${index} not found. Current array has ${banner.instagramReelIds.length} item(s).`,
+      );
+    }
+
+    banner.instagramReelIds.splice(index, 1);
+    banner.markModified('instagramReelIds');
+    await banner.save();
+
+    return { reelIds: banner.instagramReelIds };
   }
 }
