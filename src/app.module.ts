@@ -20,6 +20,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { UploadsModule } from './modules/uploads/uploads.module';
 import { ShipmentsModule } from './modules/shipments/shipments.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { MarketingModule } from './modules/marketing/marketing.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     UploadsModule,
     ShipmentsModule,
     EventEmitterModule.forRoot(),
+    MarketingModule,
   ],
   providers: [
     // { provide: APP_GUARD, useClass: JwtAuthGuard },
